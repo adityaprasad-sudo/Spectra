@@ -8,9 +8,9 @@
 </head>
 
 <body>
-    <div class = "navbar">
+    <div class = "nav">
         <div class =  "logo"> <img src= "images/vegetable.png" alt="vegetable" width = 22px, height = 18px><span> Spectra </span></div>
-        <div class = "navlink">
+        <div class = "links">
             <a href="#meal">Da Meal Prep</a>
             <a herf="#restaurant">Restaurent browser</a>
         </div>
@@ -22,4 +22,23 @@
         <p class="sub">Select Restaurants that suits your goals</p>
         <a herf="#meal" class="btn">Lets Go</a>
     </div>
+</div>
+
+<div class = "container">
+    <div id="meal" class = "card">
+        <h2><img src="images/meal.png", width=20px, height=20px>Meal planner</h2>
+        <p class="cardes">Tell us whats in your fridge and whats your goal</p>
+        <label for="ingerdiants"> Your Ingrediants</label>
+        <textarea id="ingrediants" placeholder="eg chicken, rice, eggs"></textarea>
+        <label>Your goal</label>
+        <div class="goal" id="goal">
+        </div>
+        <label for ="days">Number of days: <span id = "da days"></span></label>
+        <input type="range" id="days" min="1" max="7" value="3" <!-- Max value 7 days because the food could expire that aint good-->
+        <p class="err" id="mealerr">
+            <button class="btn" id="mealbtn">Gnerate Meal Prep planner</button>
+        </p>
+        <div class="spin" id="mealspin"></div>
+        <div id="mealout"></div>
+        </div>
 </div>
