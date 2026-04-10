@@ -1,5 +1,96 @@
-.logo{
-    display: flex;
-    align-items: centre;
-    gap: 3px;
+:root {
+  --marron: #772e03;
+  --lightmarron: #ac4c45;
+  --blue: #1a5fa8;
+  --text: #1a1a1a;
+  --muted: #aaaaaa;
+  --border: #b6737328;
+  --radius: 12px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
+
+
+body{
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    color: var(--green);
+    line-height: 2;
+    background: #F5F5F7;
+}
+
+.nav{
+    position: sticky;
+    top:0;
+    background: rgb(209, 192, 184);
+    border-bottom: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow);
+    z-index: 10;
+
+}
+
+.logo{
+    font-size:1rem;
+    font-weight: 600;
+    color: var(--marron);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.links{
+    color: var(--lightmarron);
+    text-decoration: none;
+    margin-left: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.links a{
+    margin-left: 10px;
+    color: var(--lightmarron);
+    text-decoration: none;
+}
+
+.links a:hover{
+    color: var(--marron);
+}
+
+.main{
+    background: linear-gradient(140deg, #ff0000 0%, #f58b00 100%);
+    padding: 80px 25px ;
+    text-align: center;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    margin: 20px;
+    box-shadow: var(--shadow);
+}
+
+.main h1{
+    font-size: 30px;
+    color: rgb(247, 247, 247);
+    margin-bottom: 20px;
+}
+
+.main p {
+    color: rgb(248, 199, 199);
+    font-size: 1rem;
+    margin-bottom: 30px;
+}
+
+.content a {
+    position: relative;
+    top:0;
+    background: rgb(207, 171, 51);
+    border-bottom: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 10px 20px;
+    align-items: center;
+    box-shadow: var(--shadow);
+    text-decoration: none;
+}
+
