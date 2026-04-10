@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width= devicewidth, initialscale = 1">
+    <meta name="viewport" content="width=device-width, initialscale = 1.0">
     <title>Spectra</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -15,8 +15,6 @@
             <a href="#restaurant">Restaurant browser</a>
         </div>
     </div>
-</body>
-
 
 <div class="main">
     <div  class = "content">
@@ -34,15 +32,29 @@
         <button class="photo">Take Photo</button>
         <button class="barcode">Scan barcode</button>
         <textarea id="ingrediants" placeholder="eg chicken, rice, eggs"></textarea>
-        <label>Your goal</label>
+        <label >Your goal</label>
         <div class="goal" id="goal">
         </div>
-        <h5 for ="days">Number of days: <span id = "da days"></span></h5>
+        <h5 for ="days">Number of days: <span id = "days-display"></span></h5>
         <input type="range" id="days" min="1" max="7" value="3" <!-- Max value 7 days because the food could expire that aint good-->
         <p class="err" id="mealerr">
             <button class="btn2" id="mealbtn">Gnerate Meal Prep planner</button>
         </p>
-        <div class="spin" id="mealspin"></div>
+        <div class="spinner" id="mealspin"></div>
         <div id="mealout"></div>
         </div>
+        <div class="overlay" id="scanner">
+        <div class="content2">
+            <h3>Scan Food Barcode</h3>
+            <div id="reader"></div>
+            <button class="btnclose" id="scanclose">Cancel</button>
+        </div>
+    </div>
+     
+
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="script.js"></script>
+
+</body>
+ 
 </div>

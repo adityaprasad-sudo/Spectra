@@ -15,6 +15,8 @@ body{
     color: var(--green);
     line-height: 2;
     background: #F5F5F7;
+    min-width: 320px;
+
 }
 
 .nav{
@@ -143,7 +145,7 @@ label{
 input[type="text"], textarea,input[type="range"] {
     width: 100%;
 }
-input [type="text"], textarea{
+input[type="text"], textarea{
     padding: 10px 2px;
     border-radius: 8px;
     border: 1px solid #ccc;
@@ -177,6 +179,10 @@ textarea{
     background: #000000;
     color: white;
 }
+.photo:hover{
+    background: #772e03;
+    transform: translateY(-1px);
+}
 .barcode{
     display: inline-block;
     margin-left: 20px;
@@ -192,4 +198,99 @@ textarea{
     background: #000000;
     color: white;
 }
+.barcode:hover{
+    background: #772e03;
+    transform: translateY(-1px);
+}
 
+.goal { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill {
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: rgb(0, 0, 0);
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: all 0.15s;
+  color: white;
+}
+.pill.active { background: var(--marron); color: white; border-color: var(--marron); transition: all 0.5s; }
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 24px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.hidden { display: none; }
+.errmsg { color: #c0392b; font-size: 0.85rem; min-height: 18px; }
+@media (max-width: 600px) {
+  .card { padding: 20px; }
+  h1 { font-size: 1.8rem; }
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+
+.overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.content2 {
+  background: white;
+  padding: 20px;
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.overlay.active .content2 {
+  transform: translateY(0);
+}
+
+#reader {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  border: 2px solid var(--border);
+}
+
+.btnclose {
+  background: var(--text);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s;
+}
+
+.btnclose:hover {
+  background: #000;
+}
