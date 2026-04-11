@@ -239,6 +239,9 @@ textarea{
   animation: spin 0.7s linear infinite;
   margin: 24px auto;
 }
+.hidden {
+    display: none !important;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 .hidden { display: none; }
 .errmsg { color: #c0392b; font-size: 0.85rem; min-height: 18px; }

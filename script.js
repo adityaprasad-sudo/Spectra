@@ -1,4 +1,6 @@
 const apibse = 'http://127.0.0.1:8000/'
+const ingrediants = document.getElementById('ingrediants');
+const mealbtn = document.getElementById('mealbtn');
 mealbtn.addEventListener('click', async (e) => {
     e.preventDefault();
     if(ingrediants.value.trim() === '') {
@@ -6,14 +8,47 @@ mealbtn.addEventListener('click', async (e) => {
         setTimeout(() => ingrediants.style.borderColor = '#ccc', 2000);
         return;
     }
+    const activepill = document.querySelectorAll('.pill.active');
+const goals = Array.from(activepill).map(pill => pill.innerText);
+mealspin.classList.remove('hidden');
+try {
+         const responce = await fetch(`${apibse}/meal`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ingredients: ingredients,
+                days: days,
+                goal: goals.length > 0 ? goals : null 
+            })
+        });
+
+        if (!responce.ok) {
+            const errData = await responce.json();
+            throw new Error(errData.detail || 'Failed to generate meal plan');
+        }
+
+        const data = await responce.json();
+        
+        // Display the result (replace line breaks with HTML <br> tags so it formats nicely)
+        mealout.innerHTML = data.mealplan.replace(/\n/g, '<br>');
+
+       } catch (error) {
+        console.error("Error:", error);
+        mealerr.innerText = "Error generating meal plan. Check console.";
+        } finally {
+        // Hide loading spinner
+        mealspin.classList.add('hidden');
+     }
     const selectedgoals = [...document.querySelectorAll('.pill.active')].map(pill => pill.innerText);
     mealbtn.disabled = true;
-    mealbtn.innerText = 'Consulting Chef...';
+    mealbtn.innerText = 'Consulting Chef..';
     mealspin.classList.remove('hidden');
     mealout.innerHTML = '';
 
     try{
-        const response = await fetch(`${apibse}meal`, {
+        const responce = await fetch(`${apibse}meal`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -24,18 +59,18 @@ mealbtn.addEventListener('click', async (e) => {
                 goals: selectedgoals
             })
         });
-        if(!response.ok){
+        if(!responce.ok){
             const err = await responce.json();
             throw new Error(err.error);
         }
-        const data = await response.json();
+        const data = await responce.json();
         const mealplan = data.mealplan;
         mealout.style.padding = '20px';
         mealout.style.background = 'white';
         mealout.style.borderRadius = '12px';
         mealout.style.marginTop = '20px';
         mealout.style.whiteSpace = 'pre-line';
-        mealout.style.border = '1px solid css';
+        mealout.style.border = '1px solid #ccc';
         let i = 0 ;
         function type(){
             if (i < mealplan.length) {
@@ -81,3 +116,93 @@ hiddenFileInput.addEventListener('change', async (e) => {
         mealspin.classList.add('hidden');
     }
 });
+const containergoal = document.getElementById('goal');
+    if (containergoal) {
+        const goalsList = ['Weight Loss', 'Muscle Gain', 'Maintenance', 'High Protein', 'Vegan'];
+        goalsList.forEach(goal => {
+            const pill = document.createElement('button');
+            pill.className = 'pill';
+            pill.innerText = goal;
+            pill.addEventListener('click', (e) => {
+                e.preventDefault(); 
+                pill.classList.toggle('active');
+            });
+            containergoal.appendChild(pill);
+        });
+    }
+    
+
+const daslide = document.getElementById('days');
+const dadays = document.getElementById('days-display'); 
+    
+    if (daslide && dadays) {
+        dadays.innerText = daslide.value;
+        daslide.addEventListener('input', (e) => {
+            dadays.innerText = e.target.value;
+        });
+    }
+   
+const barbtn = document.querySelector('.barcode');
+const overlay = document.getElementById('scanner');
+const closebtn = document.getElementById('scanclose');
+    let html5QrCode;
+
+    if (barbtn && overlay && closebtn) {
+        barbtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            overlay.classList.add('active');
+            
+            try {
+                if (typeof Html5Qrcode !== "undefined") {
+                    html5QrCode = new Html5Qrcode("reader");
+                    html5QrCode.start(
+                        { facingMode: "environment" }, 
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        (decodedText) => {
+    html5QrCode.stop().then(async () => {
+        overlay.classList.remove('active');
+        try {
+            const responce = await fetch(`${apibse}/barcode`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ barcode: decodedText })
+            });
+            if (!responce.ok) throw new Error('Product not found');
+
+            const product = await responce.json();
+
+            const label   = product.brand
+                ? `${product.brand} ${product.name}`
+                : product.name;
+
+            ingredientsInput.value +=
+                (ingredientsInput.value ? ', ' : '') + label;
+
+        } catch (err) {
+            alert(`barcode lookup failed: ${err.message}`);
+        }
+    });
+
+                        },
+                        (errorMessage) => {}
+                    ).catch(err => {
+                        alert("Camera access denied. Simulating scan.");
+                        overlay.classList.remove('active');
+                        ingredientsInput.value += (ingredientsInput.value ? ", " : "") + "Protein Bar";
+                    });
+                } else {
+                    alert("scanner is loading");
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
+        closebtn.addEventListener('click', () => {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => overlay.classList.remove('active')).catch(() => overlay.classList.remove('active'));
+            } else {
+                 overlay.classList.remove('active');
+            }
+        });
+    }    
