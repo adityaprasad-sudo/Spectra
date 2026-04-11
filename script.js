@@ -31,14 +31,11 @@ try {
 
         const data = await responce.json();
         
-        // Display the result (replace line breaks with HTML <br> tags so it formats nicely)
         mealout.innerHTML = data.mealplan.replace(/\n/g, '<br>');
 
        } catch (error) {
-        console.error("Error:", error);
-        mealerr.innerText = "Error generating meal plan. Check console.";
         } finally {
-        // Hide loading spinner
+
         mealspin.classList.add('hidden');
      }
     const selectedgoals = [...document.querySelectorAll('.pill.active')].map(pill => pill.innerText);
