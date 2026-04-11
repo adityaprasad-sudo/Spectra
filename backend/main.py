@@ -83,7 +83,27 @@ CRITICAL INSTRUCTION: Output ONLY the daily schedule. Do NOT include any introdu
         data = responce.json()
         mealplantxt = data["choices"][0]["message"]["content"]
         return {"mealplan": mealplantxt}
-    
+
+@app.post("/image")
+async def image(request: imagereq):
+    if not apikey:
+        raise HTTPException(status_code=404, detail="API key not found")
+    async with httpx.AsyncClient(timeout=None) as client:
+        responce = await client.post(
+        "https://ai.hackclub.com/proxy/v1/chat/completions",
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {apikey}"
+        },
+        json={
+            "model": "nvidia/nemotron-nano-12b-v2-vl",
+            "messages": [{"role": "user", "content":[{ "type": "text", "text": "List every food ingredient in the image. Return ONLY a comma-separated list of ingredients."}, {"type": "image_url", "image_url": {"url": f"data:{request.imtype};base64,{request.imagebase64}"}}]}]},)
+        if responce.status_code != 200:
+         raise HTTPException(status_code=responce.status_code, detail=responce.text)
+        data = responce.json()
+        ingredients = data["choices"][0]["message"]["content"]
+        return {"ingredients": ingredients}
+       
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
