@@ -1,4 +1,4 @@
-const apibse = 'http://127.0.0.1:8000/'
+const apibse = 'https://ambitiouspotato-spectra.hf.space'
 const ingrediants = document.getElementById('ingrediants');
 const mealbtn = document.getElementById('mealbtn');
 mealbtn.addEventListener('click', async (e) => {
