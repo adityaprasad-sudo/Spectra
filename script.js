@@ -48,7 +48,7 @@ try {
     mealout.innerHTML = '';
 
     try{
-        const responce = await fetch(`${apibse}meal`, {
+        const responce = await fetch(`${apibse}/meal`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
