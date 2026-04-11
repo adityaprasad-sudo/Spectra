@@ -1,2 +1,2 @@
 # Spectra
-Using Mathematics to detect ai voices
+Meal planner and Restaurant Finder
