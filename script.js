@@ -100,7 +100,7 @@ hiddenFileInput.addEventListener('change', async (e) => {
         });
         const [meta, base64] = url.split(',');
         const mimetype = meta.split(';')[0].split(':')[1];
-        const responce = await fetch(`${apibse}image`, { method: 'POST', headers:{ 'Content-Type': 'application/json' },
+        const responce = await fetch(`${apibse}/image`, { method: 'POST', headers:{ 'Content-Type': 'application/json' },
         body: JSON.stringify({imagebase64: base64, imtype: mimetype })
         });
         if(!responce.ok) throw new Error('imgae analysis failed');
