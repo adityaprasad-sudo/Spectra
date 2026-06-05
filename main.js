@@ -9,7 +9,7 @@ import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js
 import { raycast } from './raycast.js';
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
 camera.position.set(4, 2, 5); 
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -22,10 +22,11 @@ renderer.shadowMap.type = THREE.VSMShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 
+
 document.body.appendChild(renderer.domElement);
 const licolor = new THREE.Color('#100f0f');
 scene.background = licolor;
-scene.fog = new THREE.Fog(licolor, 10, 40);
+scene.fog = new THREE.Fog(licolor, 10, 100);
 const oaderchig = new RGBELoader();
 oaderchig.load('./HDR_041_Path_Env.hdr', (texture) => {
     texture.mapping = THREE.EquirectangularReflectionMapping;
@@ -48,7 +49,10 @@ shalight.shadow.blurSamples = 50;
 scene.add(shalight);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; 
-
+controls.enableZoom = false;
+controls.dampingFactor = 0.1;
+controls.enablePan = false;
+controls.maxPolarAngle = Math.PI / 2 - 0.05;
 
 
 
@@ -108,9 +112,20 @@ loader.load('./rollsroycefinal.glb', (gltf) => {
     raycast(camera, carparts);
 
 }, undefined, (error) => console.error(error));
-
+let zoom = camera.position.distanceTo(controls.target);
+const minzo = 3;
+const maxzo = 20;
+window.addEventListener('wheel', (event) => {
+    const direction = Math.sign(event.deltaY);
+    zoom += direction * 1.5;
+    zoom = THREE.MathUtils.clamp(zoom, minzo, maxzo);
+})
 function animate() {
     requestAnimationFrame(animate);
+    const currentdis = camera.position.distanceTo(controls.target);
+    const newdis = THREE.MathUtils.lerp(currentdis, zoom, 0.05);
+    const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+    camera.position.copy(controls.target).add(direction.multiplyScalar(newdis));
     controls.update(); 
 
     carparts.forEach(part => {
