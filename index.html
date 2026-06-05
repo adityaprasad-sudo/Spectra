@@ -2,62 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initialscale = 1.0">
-    <title>Spectra</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pure JS 3D Car</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #1a1a1a; }
+        canvas { display: block; }
+    </style>
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
 </head>
-
 <body>
-    <div class = "nav">
-        <div class = "logo"> <img src= "images/vegetable.png" alt="vegetable" width = 22px, height = 18px><span> Spectra </span></div>
-        <div class = "links">
-            <a href="#meal">Meal Prep</a>
-            <a href="#restaurant">Restaurant browser</a>
-        </div>
-    </div>
 
-<div class="main">
-    <div  class = "content">
-        <h1>Eat food of your CHOICE</h1>
-        <p>Select Restaurants that suits your goals</p>
-        <a href="#restaurant" class="btn1">Lets Go</a>
-    </div>
-</div>
-
-<div class = "container">
-    <div id="meal" class = "card">
-        <div class="titlemeal">Meal planner</div>
-        <div class="cardes">Tell us whats in your fridge and whats your goal</div>
-        <label for="ingerdiants"> Your Ingrediants</label>
-        <div class="btngrp">
-        <button class="photo" id="photobtn">Take Photo</button>
-        <button class="barcode">Scan barcode</button>
-        </div>
-        <input type="file" id="hiddenFileInput" accept="image/*" style="display: none;">
-        <textarea id="ingrediants" placeholder="eg chicken, rice, eggs"></textarea>
-        <label >Your goal</label>
-        <div class="goal" id="goal">
-        </div>
-        <h5 for ="days">Number of days: <span id = "days-display"></span></h5>
-        <input type="range" id="days" min="1" max="7" value="3" <!-- Max value 7 days because the food could expire that aint good-->
-        <p class="err" id="mealerr">
-            <button class="btn2" id="mealbtn">Gnerate Meal Prep planner</button>
-        </p>
-        <div class="spinner" id="mealspin"></div>
-        <div id="mealout"></div>
-        </div>
-        <div class="overlay" id="scanner">
-        <div class="content2">
-            <h3>Scan Food Barcode</h3>
-            <div id="reader"></div>
-            <button class="btnclose" id="scanclose">Cancel</button>
-        </div>
-    </div>
-     
-
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <script src="script.js"></script>
-
+    <script type="module"
+        src = '/main.js';>
+    </script>
 </body>
- 
-</div>
+</html>
