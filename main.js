@@ -15,37 +15,41 @@ camera.position.set(4, 2, 5);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.01;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.VSMShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+
 document.body.appendChild(renderer.domElement);
-RectAreaLightUniformsLib.init();
-
-const rectangle = new THREE.RectAreaLight(0xffffff, 5, 15, 15);
-
-rectangle.position.set(0, 15, 0);
-rectangle.lookAt(0, 0, 0);
-scene.add(rectangle);
-const fill = new THREE.AmbientLight(0xffffff, 0.2);
-const hdri = new RGBELoader();
-hdri.load('./HDR_041_Path_Env.hdr', (texture) => {
-  texture.mapping = THREE.EquirectangularReflectionMapping;
+const licolor = new THREE.Color('#100f0f');
+scene.background = licolor;
+scene.fog = new THREE.Fog(licolor, 10, 40);
+const oaderchig = new RGBELoader();
+oaderchig.load('./HDR_041_Path_Env.hdr', (texture) => {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
-   
 });
-const fllr = new THREE.PlaneGeometry(50,50);
-const fllrMaterial = new THREE.MeshStandardMaterial({color: 0x111111, roughness: 0.5, metalness: 0.2});
-const fllrMesh = new THREE.Mesh(fllr, fllrMaterial);
-fllrMesh.rotation.x = -Math.PI / 2;
-fllrMesh.position.y = -0.01;
-scene.add(fllrMesh);
-
+const geo = new THREE.PlaneGeometry(100, 100);
+const geomat = new THREE.ShadowMaterial({ opacity: 0.3});
+const floor = new THREE.Mesh(geo, geomat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = 0;
+floor.receiveShadow = true;
+scene.add(floor);
+const shalight = new THREE.DirectionalLight(0xffffff, 0.005);
+shalight.position.set(0, 5, 0);
+shalight.castShadow = true;
+shalight.shadow.mapSize.set(1024, 1024);
+shalight.shadow.bias = -0.001;
+shalight.shadow.radius = 20;
+shalight.shadow.blurSamples = 50;
+scene.add(shalight);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; 
 
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
-scene.add(ambientLight);
-const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
-directionalLight.position.set(5, 5, 5);
-scene.add(directionalLight);
 
 
 let carparts = []; 
@@ -92,14 +96,13 @@ loader.load('./rollsroycefinal.glb', (gltf) => {
         carparts.push(enginecover);
         
     }
-    if(bonnet){
-        bonnet.traverse((child) => {
-            if(child.isMesh && child.material && child.material.color){
-                fllrMesh.material.color.copy(child.material.color);
-                fllrMesh.material.color.multiplyScalar(0.5);
-            }
-        });
-    }
+        
+    carModel.traverse((child) => {
+       if(child.isMesh){
+        child.castShadow = true;
+        child.receiveShadow = true;
+       } 
+    });
     scene.add(carModel);
     
     raycast(camera, carparts);
