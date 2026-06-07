@@ -19,8 +19,7 @@ camera.position.set(4, 2, 5);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.001
+
 let lightmode = 0;
 let lbmesh = [];
 let rbmesh = [];
@@ -30,6 +29,7 @@ const leftbeam = new THREE.SpotLight(0xffffff,0)
 const rightbeam = new THREE.SpotLight(0xffffff,0)
 const leftbeam2 = new THREE.SpotLight(0xffffff,0)
 const rightbeam2 = new THREE.SpotLight(0xffffff,0)
+
 leftbeam.castShadow = true;
 rightbeam.castShadow = true;
 leftbeam2.castShadow = true;
@@ -45,10 +45,10 @@ let drlstripmesh = [];
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.VSMShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping
-renderer.toneMappingExposure = 0.2
-const bg = new THREE.Color('#1a1a1a')
+renderer.toneMappingExposure = 0.7
+const bg = new THREE.Color('#4d4d4d')
 scene.background = bg
-scene.fog = new THREE.Fog(bg, 1, 15);
+scene.fog = new THREE.Fog(bg, 1, 30);
 const geo = new THREE.PlaneGeometry(100, 100);
 const mat = new THREE.MeshPhongMaterial({ color: bg, shininess : 0 })
 const floor = new THREE.Mesh(geo, mat);
@@ -56,21 +56,23 @@ floor.rotation.x = -Math.PI / 2;
 floor.position.y = 0;
 floor.receiveShadow = true;
 scene.add(floor);
-const rect = new THREE.BoxGeometry(3,0.4,6)
+const rect = new THREE.BoxGeometry(3,0.01,6)
 const rectmat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 50})
 const rectmesh = new THREE.Mesh(rect, rectmat)
+// rectmesh.rotation.z = Math.PI / 4; 
+// rectmesh.rotation.y = -Math.PI / 4; 
 rectmesh.position.set(0, 3, 0)
 scene.add(rectmesh)
-const spotlight2 = new THREE.SpotLight(0xffffff, 300);
-spotlight2.position.set(0, 3.9, 2);
+const spotlight2 = new THREE.SpotLight(0xffffff, 30);
+spotlight2.position.set(0, 4, 0);
 spotlight2.target.position.set(0, 0, 0)
 
-spotlight2.angle = Math.PI/3
+// spotlight2.angle = Math.PI/4
 spotlight2.penumbra = 0.5;
 
 spotlight2.castShadow = true;
-spotlight2.shadow.mapSize.width = 1024;
-spotlight2.shadow.mapSize.height = 1024;
+spotlight2.shadow.mapSize.width = 512;
+spotlight2.shadow.mapSize.height = 512;
 spotlight2.shadow.bias = -0.0001;
 spotlight2.shadow.radius = 4
 scene.add(spotlight2)
@@ -79,29 +81,15 @@ scene.add(spotlight2.target)
 
 document.body.appendChild(renderer.domElement);
 const sceneren = new RenderPass(scene, camera);
-const bloompass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    1.5,
-    0.4,
-    0.85
-)
-bloompass.threshold = 1
-bloompass.strength = 0.04
-bloompass.radius = 0.5
-const output = new OutputPass();
-const compo = new EffectComposer(renderer);
-compo.addPass(sceneren);
-compo.addPass(bloompass);
-compo.addPass(output);
 
 const oaderchig = new EXRLoader()
-oaderchig.load('./chigga.exr', (texture) => {
+oaderchig.load('./1234.exr', (texture) => {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
-    scene.emissiveIntensity = 0.1
+    scene.environmentIntensity = 0
 
 });
-// const light = new THREE.DirectionalLight(0xffffff, 2);
+// const light = new THREE.DirectionalLight(0xffffff, 14);
 // light.position.set(0,3,0)
 // light.target.position.set(0,0,0)
 // light.castShadow = true;
@@ -125,7 +113,7 @@ shalight.shadow.radius = 20
 shalight.shadow.blurSamples = 50;
 scene.add(shalight);
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true
+controls.enableDamping = false
 controls.enableZoom = false;
 controls.dampingFactor = 0.1
 controls.enablePan = false
@@ -178,11 +166,36 @@ window.addEventListener('keydown' , (event) => {
 })
 
 let carparts = []; 
+function glowtex (colorhex) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const context = canvas.getContext('2d');
+    const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, 'rgba(255,255,255,1)');
+    const color = new THREE.Color(colorhex);
+   gradient.addColorStop(0.2, `rgba(${color.r*255}, ${Math.floor(color.g*255)}, ${Math.floor(color.b*255)}, 0.8)`);
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    return new THREE.CanvasTexture(canvas);
+}
+const gloxtexb = glowtex(0xffaa00);
+const glowmaterial = new THREE.SpriteMaterial({
+    map: gloxtexb,
+    color: 0xFF5533,
+    transparent: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+})
+    let leftindiglow = new THREE.Sprite(glowmaterial);
+let rightindiglow = new THREE.Sprite(glowmaterial);
 
 const loader = new GLTFLoader();
 loader.load('./rollsroycefinal.glb', (gltf) => {
     const carModel = gltf.scene;
-    
+
+
     const doorRight = carModel.getObjectByName('doorrf');
     const doorLeft = carModel.getObjectByName('doorlb');
     const bonnet = carModel.getObjectByName('Object_302');
@@ -234,7 +247,7 @@ loader.load('./rollsroycefinal.glb', (gltf) => {
         child.castShadow = true;
         child.receiveShadow = true;
         if(child.material){
-            child.material.envMapIntensity = 1
+            child.material.envMapIntensity = 0.2
             child.material.needsUpdate = true
         }
        } 
@@ -287,7 +300,7 @@ function animate() {
     const newdis = THREE.MathUtils.lerp(currentdis, zoom, 0.05)
     const time = Date.now() * 0.003;
     let wavelight = Math.pow(Math.sin(time), 4);
-    const flashinte = wavelight*8
+    const flashinte = wavelight*16
     let beaminten = 0;
     let low = 0;
     let high = 0;
@@ -333,14 +346,16 @@ function animate() {
             if(isblinking || ishazaon){
                 mesh.material.emissive.setHex(0xffaa00);
                 mesh.material.emissiveIntensity = flashinte;
+
             }else{
                 mesh.material.emissive.setHex(mesh.userData.orginalColor);
                 mesh.material.emissiveIntensity = isheadon? 2:0;
+
             }
         })
     }
-    updatedrl(leftdrlmesh, leftblink);
-    updatedrl(rightdrlmesh, rightblink);
+    updatedrl(leftdrlmesh, leftblink, leftindiglow);
+    updatedrl(rightdrlmesh, rightblink, rightindiglow);
     const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
     camera.position.copy(controls.target).add(direction.multiplyScalar(newdis));
     controls.update()
@@ -356,7 +371,7 @@ function animate() {
         part.rotation[axis] = THREE.MathUtils.lerp(part.rotation[axis], target, 0.08);
     });
 
-    compo.render();
+    renderer.render(scene, camera);
 }
 animate();
 
@@ -364,5 +379,5 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    compo.setSize(window.innerWidth, window.innerHeight);
+
 });
