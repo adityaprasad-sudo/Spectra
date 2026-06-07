@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {PMREMGenerator}from 'three';
 import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
@@ -42,41 +43,34 @@ let leftdrlmesh = [];
 let rightdrlmesh = [];
 let drlstripmesh = [];
 
-renderer.shadowMap.enabled = true;
+
 renderer.shadowMap.type = THREE.VSMShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping
 renderer.toneMappingExposure = 0.7
-const bg = new THREE.Color('#4d4d4d')
+const bg = new THREE.Color('#1b1b1b')
 scene.background = bg
 scene.fog = new THREE.Fog(bg, 1, 30);
 const geo = new THREE.PlaneGeometry(100, 100);
-const mat = new THREE.MeshPhongMaterial({ color: bg, shininess : 0 })
+const mat = new THREE.MeshBasicMaterial({ color: bg, shininess : 0 })
 const floor = new THREE.Mesh(geo, mat);
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = 0;
 floor.receiveShadow = true;
 scene.add(floor);
-const rect = new THREE.BoxGeometry(3,0.01,6)
-const rectmat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 50})
-const rectmesh = new THREE.Mesh(rect, rectmat)
-// rectmesh.rotation.z = Math.PI / 4; 
-// rectmesh.rotation.y = -Math.PI / 4; 
-rectmesh.position.set(0, 3, 0)
-scene.add(rectmesh)
-const spotlight2 = new THREE.SpotLight(0xffffff, 30);
-spotlight2.position.set(0, 4, 0);
-spotlight2.target.position.set(0, 0, 0)
-
-// spotlight2.angle = Math.PI/4
-spotlight2.penumbra = 0.5;
-
-spotlight2.castShadow = true;
-spotlight2.shadow.mapSize.width = 512;
-spotlight2.shadow.mapSize.height = 512;
-spotlight2.shadow.bias = -0.0001;
-spotlight2.shadow.radius = 4
-scene.add(spotlight2)
-scene.add(spotlight2.target)
+const ambientLight = new THREE.AmbientLight(0xffffff, 1); 
+scene.add(ambientLight);
+let ectasy = null;
+let covermesh = null;
+let ectasyup = false;
+const listen = new THREE.AudioListener();
+camera.add(listen);
+const enginesound = new THREE.PositionalAudio(listen);
+const audioloader = new THREE.AudioLoader();
+audioloader.load('./engine.mp3', (buffer) => {
+    enginesound.setBuffer(buffer);
+    enginesound.setRefDistance(3);
+    enginesound.setVolume(0.6);
+})
 
 
 document.body.appendChild(renderer.domElement);
@@ -86,34 +80,12 @@ const oaderchig = new EXRLoader()
 oaderchig.load('./1234.exr', (texture) => {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
-    scene.environmentIntensity = 0
+    scene.environmentIntensity = 1.2
 
 });
-// const light = new THREE.DirectionalLight(0xffffff, 14);
-// light.position.set(0,3,0)
-// light.target.position.set(0,0,0)
-// light.castShadow = true;
-// light.shadow.camera.right = 1;
-// light.shadow.camera.left = -1;
-// light.shadow.camera.top = 1;
-// light.shadow.camera.bottom = -1;
-// light.shadow.mapSize.set(1024, 1024);
-// light.shadow.bias = -0.005
-// light.shadow.radius = 2
-// light.shadow.blurSamples = 20;
-// scene.add(light);
-// scene.add(light.target)
 
-const shalight = new THREE.DirectionalLight(0xffffff, 0.005);
-shalight.position.set(0, 5, 0);
-shalight.castShadow = true;
-shalight.shadow.mapSize.set(1024, 1024);
-shalight.shadow.bias = -0.001
-shalight.shadow.radius = 20
-shalight.shadow.blurSamples = 50;
-scene.add(shalight);
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = false
+controls.enableDamping = true
 controls.enableZoom = false;
 controls.dampingFactor = 0.1
 controls.enablePan = false
@@ -163,6 +135,23 @@ window.addEventListener('keydown' , (event) => {
         if(lightmode > 2) lightmode = 0;
         isheadon = (lightmode >0);
     }
+    if(event.key.toLowerCase() === 'e'){
+    ectasyup = !ectasyup
+    if(ectasyup){
+        if(!enginesound.isPlaying){
+            enginesound.play()
+        }
+    }else {
+        if (engineSound.isPlaying) {
+                const time = enginesound.context.currentTime;
+                enginesound.gain.gain.setTargetAtTime(0, time, 0.5);
+                setTimeout(() => {
+                    enginesound.stop();
+                    enginesound.setVolume(0.6); 
+                }, 1500);
+            }
+    }
+}
 })
 
 let carparts = []; 
@@ -191,8 +180,11 @@ const glowmaterial = new THREE.SpriteMaterial({
     let leftindiglow = new THREE.Sprite(glowmaterial);
 let rightindiglow = new THREE.Sprite(glowmaterial);
 
+const draloader = new DRACOLoader();
+draloader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
 const loader = new GLTFLoader();
-loader.load('./rollsroycefinal.glb', (gltf) => {
+loader.setDRACOLoader(draloader)
+loader.load('./modelDraco3.glb', (gltf) => {
     const carModel = gltf.scene;
 
 
@@ -210,6 +202,19 @@ loader.load('./rollsroycefinal.glb', (gltf) => {
     const lowrb = carModel.getObjectByName('Object_175.021');
     const highrb = carModel.getObjectByName('Object_256');
     const taillight = carModel.getObjectByName('Object_460');
+     ectasy = carModel.getObjectByName('ectasy');
+     covermesh = carModel.getObjectByName('covermesh');
+    if(ectasy){
+        ectasy.userData.downZ = ectasy.position.z
+        ectasy.userData.upZ = ectasy.position.z + 0.09
+        ectasy.add(enginesound)
+    }
+    if(covermesh){
+        covermesh.userData.closedX = covermesh.position.x
+        covermesh.userData.openX = covermesh.position.x + 0.08
+        covermesh.userData.upY = covermesh.position.y;
+        covermesh.userData.downY = covermesh.position.y + 0.02
+    }
 
 
     if (doorRight) {
@@ -247,7 +252,7 @@ loader.load('./rollsroycefinal.glb', (gltf) => {
         child.castShadow = true;
         child.receiveShadow = true;
         if(child.material){
-            child.material.envMapIntensity = 0.2
+            child.material.envMapIntensity = 0.3
             child.material.needsUpdate = true
         }
        } 
@@ -296,6 +301,24 @@ window.addEventListener('wheel', (event) => {
 
 function animate() {
     requestAnimationFrame(animate)
+    if(ectasy && covermesh){
+        if(ectasyup){
+            covermesh.position.y = THREE.MathUtils.lerp(covermesh.position.y, covermesh.userData.downY, 0.2)
+            if(Math.abs(covermesh.position.y - covermesh.userData.downY) < 0.005){
+                covermesh.position.x = THREE.MathUtils.lerp(covermesh.position.x, covermesh.userData.openX, 0.1);
+            }
+            if(Math.abs(covermesh.position.x - covermesh.userData.openX) < 0.01){
+                ectasy.position.z = THREE.MathUtils.lerp(ectasy.position.z, ectasy.userData.upZ, 0.1);
+            }
+        }else {
+            ectasy.position.z = THREE.MathUtils.lerp(ectasy.position.z, ectasy.userData.downZ, 0.1);
+            if(Math.abs(ectasy.position.z - ectasy.userData.downZ) < 0.01){
+                covermesh.position.x = THREE.MathUtils.lerp(covermesh.position.x, covermesh.userData.closedX, 0.1);
+            }
+            if(Math.abs(covermesh.position.x - covermesh.userData.closedX) < 0.01){
+                covermesh.position.y = THREE.MathUtils.lerp(covermesh.position.y, covermesh.userData.upY, 0.2);
+            }
+    }}
     const currentdis = camera.position.distanceTo(controls.target);
     const newdis = THREE.MathUtils.lerp(currentdis, zoom, 0.05)
     const time = Date.now() * 0.003;
@@ -354,8 +377,8 @@ function animate() {
             }
         })
     }
-    updatedrl(leftdrlmesh, leftblink, leftindiglow);
-    updatedrl(rightdrlmesh, rightblink, rightindiglow);
+    updatedrl(leftdrlmesh, leftblink);
+    updatedrl(rightdrlmesh, rightblink);
     const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
     camera.position.copy(controls.target).add(direction.multiplyScalar(newdis));
     controls.update()
