@@ -14,8 +14,14 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 200);
 camera.position.set(4, 2, 5); 
+const dome = new THREE.PointLight(0xffffff, 0);
+dome.distance = 2;
+camera.add(dome);
+scene.add(camera);
+
+let isintview = false
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight)
@@ -83,7 +89,8 @@ oaderchig.load('./1234.exr', (texture) => {
     scene.environmentIntensity = 1.2
 
 });
-
+let screencover = null
+let screenopen = false
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true
 controls.enableZoom = false;
@@ -136,13 +143,15 @@ window.addEventListener('keydown' , (event) => {
         isheadon = (lightmode >0);
     }
     if(event.key.toLowerCase() === 'e'){
+        
     ectasyup = !ectasyup
+    screenopen = ectasyup
     if(ectasyup){
         if(!enginesound.isPlaying){
             enginesound.play()
         }
     }else {
-        if (engineSound.isPlaying) {
+        if (enginesound.isPlaying) {
                 const time = enginesound.context.currentTime;
                 enginesound.gain.gain.setTargetAtTime(0, time, 0.5);
                 setTimeout(() => {
@@ -150,8 +159,29 @@ window.addEventListener('keydown' , (event) => {
                     enginesound.setVolume(0.6); 
                 }, 1500);
             }
+    }}
+    if (event.key.toLowerCase() === 'v'){
+        isintview = !isintview;
+        if(isintview){
+            camera.fov = 60
+            camera.updateProjectionMatrix();
+            controls.maxPolarAngle = Math.PI
+            camera.rotation.y = Math.PI
+            camera.position.set(-0.4, 1.2, -0.4);
+            controls.target.set(-0.4, 1.1,-0.2);
+            ambientLight.intensity = 2
+            dome.intensity = 5
+            
+        }else{
+            camera.fov = 45
+            camera.updateProjectionMatrix();
+            controls.maxPolarAngle = Math.PI / 2 - 0.05;
+            camera.position.set(4, 2, 5)
+            controls.target.set(0, 0, 0)
+            ambientLight.intensity = 1
+            dome.intensity = 0
+        }
     }
-}
 })
 
 let carparts = []; 
@@ -184,7 +214,7 @@ const draloader = new DRACOLoader();
 draloader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
 const loader = new GLTFLoader();
 loader.setDRACOLoader(draloader)
-loader.load('./modelDraco3.glb', (gltf) => {
+loader.load('./modelDraco6.glb', (gltf) => {
     const carModel = gltf.scene;
 
 
@@ -202,6 +232,7 @@ loader.load('./modelDraco3.glb', (gltf) => {
     const lowrb = carModel.getObjectByName('Object_175.021');
     const highrb = carModel.getObjectByName('Object_256');
     const taillight = carModel.getObjectByName('Object_460');
+    screencover = carModel.getObjectByName('covermeshscreen');
      ectasy = carModel.getObjectByName('ectasy');
      covermesh = carModel.getObjectByName('covermesh');
     if(ectasy){
@@ -214,6 +245,12 @@ loader.load('./modelDraco3.glb', (gltf) => {
         covermesh.userData.openX = covermesh.position.x + 0.08
         covermesh.userData.upY = covermesh.position.y;
         covermesh.userData.downY = covermesh.position.y + 0.02
+    }
+    if(screencover){
+        screencover.userData.closedrotx = screencover.rotation.x
+        screencover.userData.openrotx = screencover.rotation.x + (Math.PI/4)
+        screencover.userData.closedy = screencover.position.y
+        screencover.userData.openy = screencover.position.y - 0.2
     }
 
 
@@ -319,8 +356,20 @@ function animate() {
                 covermesh.position.y = THREE.MathUtils.lerp(covermesh.position.y, covermesh.userData.upY, 0.2);
             }
     }}
+    if(screencover){
+        if(screenopen){
+            screencover.rotation.x = THREE.MathUtils.lerp(screencover.rotation.x, screencover.userData.openrotx, 0.1);
+            if(Math.abs(screencover.rotation.x - screencover.userData.openrotx) < 0.01){screencover.position.y = THREE.MathUtils.lerp(screencover.position.y, screencover.userData.openy, 0.1)};
+        } else {
+            screencover.position.y = THREE.MathUtils.lerp(screencover.position.y, screencover.userData.closedy, 0.1);
+            if(Math.abs(screencover.position.y - screencover.userData.closedy) < 0.01){screencover.rotation.x = THREE.MathUtils.lerp(screencover.rotation.x, screencover.userData.closedrotx, 0.1)} 
+        }
+    }
+    if(!isintview){
     const currentdis = camera.position.distanceTo(controls.target);
     const newdis = THREE.MathUtils.lerp(currentdis, zoom, 0.05)
+    const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+    camera.position.copy(controls.target).add(direction.multiplyScalar(newdis));}
     const time = Date.now() * 0.003;
     let wavelight = Math.pow(Math.sin(time), 4);
     const flashinte = wavelight*16
@@ -379,8 +428,7 @@ function animate() {
     }
     updatedrl(leftdrlmesh, leftblink);
     updatedrl(rightdrlmesh, rightblink);
-    const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
-    camera.position.copy(controls.target).add(direction.multiplyScalar(newdis));
+    
     controls.update()
 
     
@@ -401,6 +449,7 @@ animate();
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
+    
     renderer.setSize(window.innerWidth, window.innerHeight);
 
 });
