@@ -20,6 +20,37 @@ const dome = new THREE.PointLight(0xffffff, 0);
 dome.distance = 2;
 camera.add(dome);
 scene.add(camera);
+const btnmenu = document.getElementById('btnmenu');
+const modeldrawer = document.getElementById('modeldrawer');
+const loading = document.getElementById('loadingscreen');
+const progressbar = document.getElementById('progbar')
+const manager = new THREE.LoadingManager();
+manager.onProgress = function (url, loaded, total) {
+    const progress = (loaded / total) * 100;
+    progressbar.style.width = progress + '%';
+}
+manager.onLoad = function () {
+    setTimeout(() => {
+        loading.style.opacity = '0';
+        setTimeout(() => {
+            loading.style.display = 'none';
+        }, 800)
+    }, 500)
+}
+const draloader = new DRACOLoader(manager);
+draloader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+const loader = new GLTFLoader(manager);
+loader.setDRACOLoader(draloader);
+const oaderchig= new EXRLoader(manager);
+oaderchig.load('./1234.exr', (texture) => {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = texture;
+    scene.environmentIntensity = 1.2;
+})
+btnmenu.addEventListener('click', () => {
+    modeldrawer.classList.toggle('open');
+})
+
 
 let isintview = false
 
@@ -82,13 +113,7 @@ audioloader.load('./engine.mp3', (buffer) => {
 document.body.appendChild(renderer.domElement);
 const sceneren = new RenderPass(scene, camera);
 
-const oaderchig = new EXRLoader()
-oaderchig.load('./1234.exr', (texture) => {
-    texture.mapping = THREE.EquirectangularReflectionMapping;
-    scene.environment = texture;
-    scene.environmentIntensity = 1.2
 
-});
 let screencover = null
 let screenopen = false
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -120,48 +145,8 @@ function emissive(mesh, clorhex, arraystore){
         });
     }
 }
-window.addEventListener('keydown' , (event) => {
-    if(event.key.toLowerCase() === 'l'){
-        leftblink = !leftblink;
-        rightblink = false;
-        ishazaon = false;
-    }
-    if(event.key.toLowerCase() === 'r'){
-        rightblink = !rightblink;
-        leftblink = false;
-        ishazaon = false;
-    }
-
-    if(event.key.toLowerCase() === 'c'){
-        ishazaon = !ishazaon;
-        leftblink = false;
-        rightblink = false;
-    }
-    if(event.key.toLowerCase() === 't'){
-        lightmode++;
-        if(lightmode > 2) lightmode = 0;
-        isheadon = (lightmode >0);
-    }
-    if(event.key.toLowerCase() === 'e'){
-        
-    ectasyup = !ectasyup
-    screenopen = ectasyup
-    if(ectasyup){
-        if(!enginesound.isPlaying){
-            enginesound.play()
-        }
-    }else {
-        if (enginesound.isPlaying) {
-                const time = enginesound.context.currentTime;
-                enginesound.gain.gain.setTargetAtTime(0, time, 0.5);
-                setTimeout(() => {
-                    enginesound.stop();
-                    enginesound.setVolume(0.6); 
-                }, 1500);
-            }
-    }}
-    if (event.key.toLowerCase() === 'v'){
-        isintview = !isintview;
+document.getElementById('btnview').addEventListener('click' , () => {
+    isintview = !isintview;
         if(isintview){
             camera.fov = 60
             camera.updateProjectionMatrix();
@@ -181,8 +166,46 @@ window.addEventListener('keydown' , (event) => {
             ambientLight.intensity = 1
             dome.intensity = 0
         }
+    });
+document.getElementById('btnengine').addEventListener('click' , () => {
+    ectasyup = !ectasyup
+    screenopen = ectasyup
+    if(ectasyup){
+        if(!enginesound.isPlaying){
+            enginesound.play()
+        }
+    }else {
+        if (enginesound.isPlaying) {
+                const time = enginesound.context.currentTime;
+                enginesound.gain.gain.setTargetAtTime(0, time, 0.5);
+                setTimeout(() => {
+                    enginesound.stop();
+                    enginesound.setVolume(0.6); 
+                }, 1500);
+            }
     }
-})
+})    
+document.getElementById('btnleft').addEventListener('click' , () => {
+        leftblink = !leftblink;
+        rightblink = false;
+        ishazaon = false;
+    });
+document.getElementById('btnright').addEventListener('click' , () => {
+        rightblink = !rightblink;
+        leftblink = false;
+        ishazaon = false;
+    });
+
+document.getElementById('btnhazard').addEventListener('click' , () => {
+        ishazaon = !ishazaon;
+        leftblink = false;
+        rightblink = false;
+    });
+document.getElementById('btnlights').addEventListener('click' , () => {
+        lightmode++;
+        if(lightmode > 2) lightmode = 0;
+        isheadon = (lightmode >0);
+    });
 
 let carparts = []; 
 function glowtex (colorhex) {
@@ -209,13 +232,24 @@ const glowmaterial = new THREE.SpriteMaterial({
 })
     let leftindiglow = new THREE.Sprite(glowmaterial);
 let rightindiglow = new THREE.Sprite(glowmaterial);
+let currentmodel = null
+function loadmodel(modelpath){
+    if(currentmodel){
+        scene.remove(currentmodel);
+        carparts = [];
+        lbmesh = []; hbmesh = []; tlmesh = [];
+        leftdrlmesh = []; rightdrlmesh = [];
+        ectasy = null; covermesh = null; screencover = null;
+    }
+    loading.style.display = 'flex';
+    setTimeout(() => {
+        loading.style.opacity = '1';
+    }, 10)
+    progressbar.style.width = '0%';
 
-const draloader = new DRACOLoader();
-draloader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-const loader = new GLTFLoader();
-loader.setDRACOLoader(draloader)
-loader.load('./modelDraco6.glb', (gltf) => {
+loader.load(modelpath, (gltf) => {
     const carModel = gltf.scene;
+    currentmodel = carModel;
 
 
     const doorRight = carModel.getObjectByName('doorrf');
@@ -325,7 +359,15 @@ loader.load('./modelDraco6.glb', (gltf) => {
     carModel.add(rightbeam2.target)
     raycast(camera, carparts);
 
-}, undefined, (error) => console.error(error))
+}, undefined, (error) => console.error(error));}
+loadmodel('./modelDraco6.glb')
+document.querySelectorAll('.carcard').forEach(card => {
+    card.addEventListener('click', () => {
+    const modelpath = card.getAttribute('data-model');
+    modeldrawer.classList.remove('open');
+    loadmodel(modelpath);
+    })
+})
 
 let zoom = camera.position.distanceTo(controls.target);
 const minzo = 3

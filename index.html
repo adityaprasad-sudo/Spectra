@@ -19,6 +19,176 @@
     </script>
 </head>
 <body>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+        body { margin: 0; overflow: hidden; font-family: 'Montserrat', sans-serif; }
+        #loadingscreen{
+            position: absolute;
+            top:0;
+            left:0;
+            width: 100vw;
+            height: 100vh;
+            background: #111;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            z-index: 9999;
+            transition: opacity 0.8s ease;
+        }
+        .loadingtitle{
+            letter-spacing: 4px;
+            font-weight: 300;
+            margin-bottom: 20px;
+        }
+        .progcunt{
+            width: 300px;
+            height: 2px;
+            background: rgba(255,255,255,0.1)
+        }
+        #progbar{
+            width: 0;
+            height: 2px;
+            background: #fff;
+            transition: width 0.1s linear;
+        }
+        .toolbar{
+            position: absolute;
+            left: 0; top:0;
+            width: 70px;
+            height: 100vh;
+            background: rgba(10,10,10,0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            pointer-events: auto;
+            z-index: 100;
+
+        }
+        .iconbtn{
+            width: 44px; height: 44px;
+            background:transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .iconbtn:hover{
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .iconbtn img{
+            width: 24px; 
+        }
+        .iconbtn svg{width: 20px; height: 20px; fill: #fff;}
+        .space {flex-grow: 1;}
+        .modeldrawer{
+            position: absolute;
+            left: 70px;
+            top: 0;
+            width: 340px;
+            height: 100vh;
+            background: rgba(15,15,15,0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            padding: 40px 30px;
+            box-sizing: border-box;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            pointer-events: auto;
+            z-index: 90;
+            transform: translateX(-120%);
+            transition: transform 0.5s cubic-bezier(0.4,0,0.2,1)
+        }
+        .modeldrawer.open{transform: translateX(0);}
+        .titledrawer{color:white; font-size: 12px; letter-spacing: 4px; font-weight: 300; margin-bottom: 30px;}
+        .carcard{
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.5s
+        }
+        .carcard:hover{
+            border-color: #d4af37; 
+            transform: translateY(-3px);
+        }
+        .carcard img{
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            display: block;
+        }
+        .carname{
+            background: #111;
+            padding: 15px; 
+            color: white; 
+            font-size: 11px;
+            letter-spacing:2px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+    </style>
+    <div id="loadingscreen">
+        <div class="loadingtitle">Initializing 3D Model</div>
+        <div class="progcunt">
+            <div id="progbar"></div>
+        </div>
+    </div>
+
+    <div id="ui" style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 100;">
+        
+        <div class="toolbar">
+            <button id="btnmenu" class="iconbtn" title="Select Model">
+                <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+            
+            <div style="height: 30px;"></div> 
+            
+            <button id="btnview" class="iconbtn" title="Cabin View">
+                <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            </button>
+            <button id="btnengine" class="iconbtn" title="Engine Start">
+                <svg viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/></svg>            
+            </button>
+            <button id="btnlights" class="iconbtn" title="Headlights">
+                <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zM9.5 8h-2v2h2V8zm0 6h-2v2h2v-2zm3-3h-2v2h2v-2zm3 3h-2v2h2v-2zm0-6h-2v2h2V8z"/></svg>
+            </button>
+            
+            <div class="space"></div>
+            
+            <button id="btnleft" class="iconbtn" title="Left Blinker">
+                <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
+            </button>
+            <button id="btnhazard" class="iconbtn" title="Hazards">
+                <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+            </button>
+            <button id="btnright" class="iconbtn" title="Right Blinker">
+                <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </button>
+        </div>
+
+        <div class="modeldrawer" id="modeldrawer">
+            <div class="drawertitle">Select Model</div>
+            <div class="carcard" data-model="./modelDraco6.glb">
+                <img src="https://public.blenderkit.com/thumbnails/assets/860f5a12a25546c8984a12d0dde0b773/files/thumbnail_6fa2ea7d-ca8d-4a4a-a4b3-fc4358af5e39.jpg.256x256_q85_crop-%2C.jpg.webp?webp_generated=1766443301" alt="Ghost">
+                <div class="carname">Ghost (V12)</div>
+            </div> 
+        </div>
+    </div>
 
     <script type="module"
         src = '/main.js';>
