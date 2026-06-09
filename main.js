@@ -12,7 +12,6 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass} from 'three/addons/postprocessing/OutputPass.js';
-
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 200);
 camera.position.set(4, 2, 5); 
@@ -68,10 +67,10 @@ const rightbeam = new THREE.SpotLight(0xffffff,0)
 const leftbeam2 = new THREE.SpotLight(0xffffff,0)
 const rightbeam2 = new THREE.SpotLight(0xffffff,0)
 
-leftbeam.castShadow = true;
-rightbeam.castShadow = true;
-leftbeam2.castShadow = true;
-rightbeam2.castShadow = true;
+leftbeam.castShadow = false;
+rightbeam.castShadow = false;
+leftbeam2.castShadow = false;
+rightbeam2.castShadow = false;
 leftbeam.penumbra = 0.5;
 rightbeam.penumbra = 0.5;
 leftbeam2.penumbra = 0.5;
@@ -88,7 +87,7 @@ const bg = new THREE.Color('#1b1b1b')
 scene.background = bg
 scene.fog = new THREE.Fog(bg, 1, 30);
 const geo = new THREE.PlaneGeometry(100, 100);
-const mat = new THREE.MeshBasicMaterial({ color: bg, shininess : 0 })
+const mat = new THREE.MeshLambertMaterial({ color: bg})
 const floor = new THREE.Mesh(geo, mat);
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = 0;
@@ -339,12 +338,14 @@ loader.load(modelpath, (gltf) => {
     emissive(lowrb, 0xffffff, rbmesh)
     emissive(highrb, 0xffffff, rbmesh)
     emissive(taillight, 0xff0000, tlmesh)
-    leftbeam.position.set(1,0.8,1.8)
-    leftbeam.target.position.set(1,0,10)
+    leftbeam.position.set(-0.5,0.8,1.8)
+    leftbeam.target.position.set(-0.5,0.8,2.5)
+    leftbeam.angle = Math.PI
     
-    leftbeam2.position.set(1,0.8,1.8)
-    leftbeam2.target.position.set(1,0,10)
+    leftbeam2.position.set(-0.5,0.8,1.8)
+    leftbeam2.target.position.set(-0.5,0.8,2.5)
     carModel.add(leftbeam)
+
     carModel.add(leftbeam.target)
 
     carModel.add(leftbeam2)
