@@ -41,15 +41,7 @@ const draloader = new DRACOLoader(manager);
 draloader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
 const loader = new GLTFLoader(manager);
 loader.setDRACOLoader(draloader);
-const oaderchig= new EXRLoader(manager);
-oaderchig.load('./1234.exr', (texture) => {
-    texture.mapping = THREE.EquirectangularReflectionMapping;
-    scene.environment = texture;
-    scene.environmentIntensity = 1.2;
-})
-btnmenu.addEventListener('click', () => {
-    modeldrawer.classList.toggle('open');
-})
+
 
 
 let isintview = false
@@ -57,7 +49,18 @@ let isintview = false
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
+const gen = new PMREMGenerator(renderer);
+gen.compileEquirectangularShader();
+const oaderchig= new EXRLoader(manager);
+oaderchig.load('./1234.exr', (texture) => {
+    const envmap = gen.fromEquirectangular(texture).texture;
+    scene.environment = envmap;
+    scene.environmentIntensity = 1.2;
+    texture.dispose();
+})
+btnmenu.addEventListener('click', () => {
+    modeldrawer.classList.toggle('open');
+})
 let lightmode = 0;
 let lbmesh = [];
 let rbmesh = [];
@@ -124,15 +127,31 @@ const bloomPass = new UnrealBloomPass(
 
 const outputPass = new OutputPass();
 const rendertar = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight,{
-    samples: 4,
-    type: THREE.HalfFloatType
+    samples: 8,
+    type: THREE.HalfFloatType,
+    format: THREE.RGBAFormat,
+    depthBuffer: true
 });
 const composer = new EffectComposer(renderer, rendertar);
 composer.addPass(renderScene);
 composer.addPass(bloomPass);
 composer.addPass(outputPass);
+const slidermsaa = document.getElementById('msaaSlider');
+const msaareadout = document.getElementById('msaaReadout');
+const level = [0,2,4,8,16]
+if(slidermsaa && msaareadout){
+    slidermsaa.addEventListener('input', (e) => {
+        const levelin = parseInt(e.target.value)
+        const samplesr = level[levelin]
+        msaareadout.innerText = samplesr === 0 ? 'off' : samplesr + 'x'
+        composer.renderTarget1.samples = samplesr;
+        composer.renderTarget2.samples = samplesr;
 
-
+        
+        composer.renderTarget1.dispose();
+        composer.renderTarget2.dispose();
+    });
+}
 document.body.appendChild(renderer.domElement);
 const sceneren = new RenderPass(scene, camera);
 
