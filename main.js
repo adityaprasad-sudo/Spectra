@@ -7,11 +7,12 @@ import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
 import { GroundProjectedSkybox } from 'three/addons/objects/GroundProjectedSkybox.js';
-import { raycast } from './raycast.js';
+import { updateraycaster } from './raycast.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+import { aston } from './Am.js';
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 200);
 camera.position.set(4, 2, 5); 
@@ -66,19 +67,23 @@ const leftbeam = new THREE.SpotLight(0xffffff,0)
 const rightbeam = new THREE.SpotLight(0xffffff,0)
 const leftbeam2 = new THREE.SpotLight(0xffffff,0)
 const rightbeam2 = new THREE.SpotLight(0xffffff,0)
-
+const groundlightl = new THREE.PointLight(0xffffff, 0, 5)
+const groundlightr = new THREE.PointLight(0xffffff, 0, 5)
+const groundtail = new THREE.PointLight(0xffffff, 0, 5)
+groundlightl.castShadow = false
+groundlightr.castShadow = false
+groundtail.castShadow = false
 leftbeam.castShadow = false;
-rightbeam.castShadow = false;
-leftbeam2.castShadow = false;
-rightbeam2.castShadow = false;
+rightbeam.castShadow = false
+leftbeam2.castShadow = false
+rightbeam2.castShadow = false
 leftbeam.penumbra = 0.5;
-rightbeam.penumbra = 0.5;
-leftbeam2.penumbra = 0.5;
+rightbeam.penumbra = 0.5
+leftbeam2.penumbra = 0.5
 rightbeam2.penumbra = 0.5;
-let leftdrlmesh = [];
+let leftdrlmesh = []
 let rightdrlmesh = [];
-let drlstripmesh = [];
-
+let drlstripmesh = []
 
 renderer.shadowMap.type = THREE.VSMShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -94,7 +99,7 @@ floor.position.y = 0;
 floor.receiveShadow = true;
 scene.add(floor);
 const ambientLight = new THREE.AmbientLight(0xffffff, 1); 
-scene.add(ambientLight);
+
 let ectasy = null;
 let covermesh = null;
 let ectasyup = false;
@@ -107,6 +112,25 @@ audioloader.load('./engine.mp3', (buffer) => {
     enginesound.setRefDistance(3);
     enginesound.setVolume(0.6);
 })
+const renderScene = new RenderPass(scene, camera);
+
+
+const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight), 
+    0.2,
+    0.8, 
+    0.8
+);
+
+const outputPass = new OutputPass();
+const rendertar = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight,{
+    samples: 4,
+    type: THREE.HalfFloatType
+});
+const composer = new EffectComposer(renderer, rendertar);
+composer.addPass(renderScene);
+composer.addPass(bloomPass);
+composer.addPass(outputPass);
 
 
 document.body.appendChild(renderer.domElement);
@@ -144,15 +168,21 @@ function emissive(mesh, clorhex, arraystore){
         });
     }
 }
+let intcamerapos = new THREE.Vector3(-0.4, 1.2, -0.4)
+let intcamtarget = new THREE.Vector3(-0.4, 1.1,-0.2)
 document.getElementById('btnview').addEventListener('click' , () => {
     isintview = !isintview;
+    
         if(isintview){
             camera.fov = 60
             camera.updateProjectionMatrix();
             controls.maxPolarAngle = Math.PI
+            if(intcamerapos.equals(intcamtarget)){
+                intcamtarget.z -= 0.1;
+            }
             camera.rotation.y = Math.PI
-            camera.position.set(-0.4, 1.2, -0.4);
-            controls.target.set(-0.4, 1.1,-0.2);
+            camera.position.copy(intcamerapos);
+            controls.target.copy(intcamtarget);
             ambientLight.intensity = 2
             dome.intensity = 5
             
@@ -249,44 +279,59 @@ function loadmodel(modelpath){
 loader.load(modelpath, (gltf) => {
     const carModel = gltf.scene;
     currentmodel = carModel;
-
-
-    const doorRight = carModel.getObjectByName('doorrf');
-    const doorLeft = carModel.getObjectByName('doorlb');
-    const bonnet = carModel.getObjectByName('Object_302');
-    const doorbackright = carModel.getObjectByName('doorrb');
-    const doorfrontleft = carModel.getObjectByName('doorlf');
-    const stripright = carModel.getObjectByName('Object_767');
-    const stripleft = carModel.getObjectByName('Object_183');
-    const trunk = carModel.getObjectByName('Object_230');
-    const enginecover = carModel.getObjectByName('Object_306');
+    if(modelpath.includes('aston') || modelpath.includes('modelDraco8')){ aston(carModel, carparts);
+        intcamerapos.set(0.27, 0.69, -0.3);
+        intcamtarget.set(0.27, 0.68, -0.29);
+        const astonbg = new THREE.Color('#b9afae')
+        scene.background = astonbg
+        scene.fog.color = astonbg
+        floor.material.color = new THREE.Color('#1a1a1a')
+        leftbeam.position.set(1, 1, 1); 
+        leftbeam.target.position.set(-0.8, 0.4, 10);
+        leftbeam2.position.set(1, 1, 1);
+        leftbeam2.target.position.set(-0.8, 0.4, 10);
+        
+        rightbeam.position.set(-0.5, 1, 1);
+        rightbeam.target.position.set(-1.2, 0.4, 10);
+        rightbeam2.position.set(-0.5, 1, 1);
+        rightbeam2.target.position.set(-1.2, 0.4, 10);
+        const blinkright = carModel.getObjectByName('Object_767');
+    const blinkleft = carModel.getObjectByName('Object_183');
+    
     const lowlb = carModel.getObjectByName('Object_253');
     const highlb = carModel.getObjectByName('Object_249');
     const lowrb = carModel.getObjectByName('Object_175.021');
     const highrb = carModel.getObjectByName('Object_256');
     const taillight = carModel.getObjectByName('Object_460');
-    screencover = carModel.getObjectByName('covermeshscreen');
-     ectasy = carModel.getObjectByName('ectasy');
-     covermesh = carModel.getObjectByName('covermesh');
-    if(ectasy){
-        ectasy.userData.downZ = ectasy.position.z
-        ectasy.userData.upZ = ectasy.position.z + 0.09
-        ectasy.add(enginesound)
-    }
-    if(covermesh){
-        covermesh.userData.closedX = covermesh.position.x
-        covermesh.userData.openX = covermesh.position.x + 0.08
-        covermesh.userData.upY = covermesh.position.y;
-        covermesh.userData.downY = covermesh.position.y + 0.02
-    }
-    if(screencover){
-        screencover.userData.closedrotx = screencover.rotation.x
-        screencover.userData.openrotx = screencover.rotation.x + (Math.PI/4)
-        screencover.userData.closedy = screencover.position.y
-        screencover.userData.openy = screencover.position.y - 0.2
-    }
+
+        emissive(blinkleft, 0xffaa00, leftdrlmesh);
+        emissive(blinkright, 0xffaa00, rightdrlmesh);
+        emissive(lowrb, 0xffffff, lbmesh);
+        emissive(highlb, 0xffffff, hbmesh);
+        emissive(taillight, 0xff0000, tlmesh);
+        groundlightl.position.set(0.4,0.5,-1.2)
+        groundlightr.position.set(-0.5,0.5,-1.2)
+       
+        
+    }else{
+            intcamerapos.set(-0.4, 1.2, -0.4);
+            intcamtarget.set(-0.4, 1.1, -0.2);
+            const enginecover = carModel.getObjectByName('Object_306');
+            const rrbg = new THREE.Color('#1b1b1b')
+            scene.background = rrbg
+            scene.fog.color = rrbg
+            floor.material.color = rrbg
+            
 
 
+ const stripright = carModel.getObjectByName('Object_767');
+    const stripleft = carModel.getObjectByName('Object_183');
+    const doorRight = carModel.getObjectByName('doorrf');
+    const doorLeft = carModel.getObjectByName('doorlb');
+    const bonnet = carModel.getObjectByName('Object_302');
+    const trunk = carModel.getObjectByName('Object_230');
+    const doorbackright = carModel.getObjectByName('doorrb');
+    const doorfrontleft = carModel.getObjectByName('doorlf');
     if (doorRight) {
         doorRight.userData = { isOpen: false, targetRotation: 0, axis: 'z' };
         carparts.push(doorRight);
@@ -316,7 +361,52 @@ loader.load(modelpath, (gltf) => {
         carparts.push(enginecover);
         
     }
+    leftbeam.position.set(0.3, 0.5, 2);
+        leftbeam.target.position.set(0.3, 0.1, 10);
+         
         
+        leftbeam2.position.set(0.3, 0.5, 2);
+        leftbeam2.target.position.set(0.3, 0.1, 10);
+        
+        rightbeam.position.set(-1, 0.5,1.8);
+        rightbeam.target.position.set(-2, 0.1, 10);
+        rightbeam2.position.set(-1, 0.5, 1.8);
+        rightbeam2.target.position.set(-2, 0.1, 10);
+        groundlightl.position.set(1.4,1,-3)
+        groundlightr.position.set(-0.2,1,-3)
+        emissive(stripright, 0xffffff, rightdrlmesh)
+        emissive(stripleft, 0xffffff, leftdrlmesh)
+
+
+}
+
+    
+    
+    const lowlb = carModel.getObjectByName('Object_253');
+    const highlb = carModel.getObjectByName('Object_249');
+    const lowrb = carModel.getObjectByName('Object_175.021');
+    const highrb = carModel.getObjectByName('Object_256');
+    const taillight = carModel.getObjectByName('Object_460');
+    screencover = carModel.getObjectByName('covermeshscreen');
+     ectasy = carModel.getObjectByName('ectasy');
+     covermesh = carModel.getObjectByName('covermesh');
+    if(ectasy){
+        ectasy.userData.downZ = ectasy.position.z
+        ectasy.userData.upZ = ectasy.position.z + 0.09
+        ectasy.add(enginesound)
+    }
+    if(covermesh){
+        covermesh.userData.closedX = covermesh.position.x
+        covermesh.userData.openX = covermesh.position.x + 0.08
+        covermesh.userData.upY = covermesh.position.y;
+        covermesh.userData.downY = covermesh.position.y + 0.02
+    }
+    if(screencover){
+        screencover.userData.closedrotx = screencover.rotation.x
+        screencover.userData.openrotx = screencover.rotation.x + (Math.PI/4)
+        screencover.userData.closedy = screencover.position.y
+        screencover.userData.openy = screencover.position.y - 0.2
+    } 
     carModel.traverse((child) => {
        if(child.isMesh){
         child.castShadow = true;
@@ -331,34 +421,25 @@ loader.load(modelpath, (gltf) => {
     setTimeout(() => {
         console.log(scene.background)
     },3000)
-    emissive(stripright, 0xffffff, rightdrlmesh)
-    emissive(stripleft, 0xffffff, leftdrlmesh)
+    
     emissive(lowlb, 0xffffff, lbmesh)
     emissive(highlb, 0xffffff, hbmesh)
     emissive(lowrb, 0xffffff, rbmesh)
     emissive(highrb, 0xffffff, rbmesh)
     emissive(taillight, 0xff0000, tlmesh)
-    leftbeam.position.set(-0.5,0.8,1.8)
-    leftbeam.target.position.set(-0.5,0.8,2.5)
-    leftbeam.angle = Math.PI
     
-    leftbeam2.position.set(-0.5,0.8,1.8)
-    leftbeam2.target.position.set(-0.5,0.8,2.5)
-    carModel.add(leftbeam)
-
-    carModel.add(leftbeam.target)
-
-    carModel.add(leftbeam2)
-    carModel.add(leftbeam2.target)
-    rightbeam.position.set(-1,0.8,1.8)
-    rightbeam.target.position.set(-1,0,10)
-    rightbeam2.position.set(-1,0.8,1.8)
-    rightbeam2.target.position.set(-1,0,10)
-    carModel.add(rightbeam)
-    carModel.add(rightbeam.target)
-    carModel.add(rightbeam2)
-    carModel.add(rightbeam2.target)
-    raycast(camera, carparts);
+    carModel.add(leftbeam);
+    carModel.add(leftbeam.target);
+    carModel.add(leftbeam2);
+    carModel.add(leftbeam2.target);
+    carModel.add(groundlightl);
+    carModel.add(groundlightr);
+    carModel.add(groundtail)
+    carModel.add(rightbeam);
+    carModel.add(rightbeam.target);
+    carModel.add(rightbeam2);
+    carModel.add(rightbeam2.target);
+    updateraycaster(camera, carparts);
 
 }, undefined, (error) => console.error(error));}
 loadmodel('./modelDraco6.glb')
@@ -409,10 +490,16 @@ function animate() {
         }
     }
     if(!isintview){
-    const currentdis = camera.position.distanceTo(controls.target);
-    const newdis = THREE.MathUtils.lerp(currentdis, zoom, 0.05)
-    const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
-    camera.position.copy(controls.target).add(direction.multiplyScalar(newdis));}
+    if(isNaN(camera.position.x) || isNaN(controls.target.x)){
+        camera.position.set(4, 2, 5)
+        controls.target.set(0, 0, 0)
+    }
+    const curdis = camera.position.distanceTo(controls.target)
+    if(curdis > 0.01){
+        const newdis = THREE.MathUtils.lerp(curdis, zoom, 0.1)
+        const direc = new THREE.Vector3().subVectors(camera.position, controls.target).normalize()
+        camera.position.copy(controls.target).add(direc.multiplyScalar(newdis));
+    }}
     const time = Date.now() * 0.003;
     let wavelight = Math.pow(Math.sin(time), 4);
     const flashinte = wavelight*16
@@ -456,6 +543,23 @@ function animate() {
     tlmesh.forEach(mesh => {
         mesh.material.emissiveIntensity = tail;
     })
+    let tailgloe = tail > 0 ? 2:0;
+    if(leftblink || ishazaon){
+        groundlightl.color.setHex(0xffaa00);
+        groundlightl.intensity = flashinte*0.4;
+    }
+    else{
+        groundlightl.color.setHex(0xff0000);
+        groundlightl.intensity = tailgloe;
+    }
+    if(rightblink || ishazaon){
+        groundlightr.color.setHex(0xffaa00);
+        groundlightr.intensity = flashinte * 0.4;
+    }
+    else{
+        groundlightr.color.setHex(0xff0000);
+        groundlightr.intensity = tailgloe;
+    }
     function updatedrl(meshes, isblinking){
         meshes.forEach(mesh => {
             if(isblinking || ishazaon){
@@ -464,7 +568,10 @@ function animate() {
 
             }else{
                 mesh.material.emissive.setHex(mesh.userData.orginalColor);
-                mesh.material.emissiveIntensity = isheadon? 2:0;
+                if(mesh.userData.originalColor === 0xffaa00){
+                mesh.material.emissiveIntensity =0;}else{
+                    mesh.material.emissiveIntensity = isheadon ? 2:0
+                }
 
             }
         })
@@ -477,15 +584,22 @@ function animate() {
     
 
     carparts.forEach(part => {
-        const axis = part.userData.axis; 
-        let target = part.userData.targetRotation;
-
-        if (part.userData.inverse) target = -target; 
-
-        part.rotation[axis] = THREE.MathUtils.lerp(part.rotation[axis], target, 0.08);
+        if(part.userData.axis === 'swan'){
+            part.rotation.order = 'ZYX';
+            
+            const targetY = part.userData.isOpen ? part.userData.openY : part.userData.closedY;
+            const targetZ = part.userData.isOpen ? part.userData.openZ : part.userData.closedZ;            part.rotation.y = THREE.MathUtils.lerp(part.rotation.y, targetY, 0.08);
+            part.rotation.z = THREE.MathUtils.lerp(part.rotation.z, targetZ, 0.08);
+            part.rotation.y = THREE.MathUtils.lerp(part.rotation.y, targetY, 0.08);
+        } else {
+            const axis = part.userData.axis
+            let target = part.userData.targetRotation
+            if(part.userData.inverse) target = -target;
+            part.rotation[axis] = THREE.MathUtils.lerp(part.rotation[axis], target, 0.08);
+        }
     });
 
-    renderer.render(scene, camera);
+    composer.render();
 }
 animate();
 
@@ -494,5 +608,5 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     
     renderer.setSize(window.innerWidth, window.innerHeight);
-
+    composer.setSize(window.innerWidth, window.innerHeight);
 });
