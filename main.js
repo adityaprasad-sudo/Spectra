@@ -93,7 +93,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping
 renderer.toneMappingExposure = 0.7
 const bg = new THREE.Color('#1b1b1b')
 scene.background = bg
-scene.fog = new THREE.Fog(bg, 1, 30);
+scene.fog = new THREE.Fog(bg, 20, 50);
 const geo = new THREE.PlaneGeometry(100, 100);
 const mat = new THREE.MeshLambertMaterial({ color: bg})
 const floor = new THREE.Mesh(geo, mat);
@@ -180,6 +180,51 @@ function emissive(mesh, clorhex, arraystore){
                 if(arraystore !== leftdrlmesh && arraystore !== rightdrlmesh ){
                   child.material.emissive = new THREE.Color(clorhex);
                   child.material.emissiveIntensity = 0
+                }
+                arraystore.push(child);
+            }
+            
+        });
+    }
+}
+function sweeper(mesh,clorhex, arraystore, rever = false){
+    if(mesh){
+        mesh.traverse((child) => {
+            if(child.isMesh){
+                child.geometry.computeBoundingBox();
+                const box = child.geometry.boundingBox;
+                const minx = box.min.x
+                const width = box.max.x - minx
+                const att = child.geometry.attributes.position
+                const uvarray = new Float32Array(att.count *2)
+                for(let i = 0; i < att.count; i++){
+                    const x = att.getX(i)
+                    uvarray[i * 2] = (x - minx) / width
+                    uvarray[i * 2 + 1] = 0.5
+                }
+                child.geometry.setAttribute('uv', new THREE.BufferAttribute(uvarray, 2))
+                child.material =    child.material.clone()
+                child.userData.orginalColor = child.material.emissive.getHex();
+                child.material.emissive = new THREE.Color(clorhex);
+                child.material.emissiveIntensity = 0
+                child.material.defines = child.material.defines || {}
+                child.material.defines.USE_UV = ''
+                child.material.customProgramCacheKey = () => 'sweeper_' + rever;
+                child.userData.sweepuni = {value: 0}
+                child.material.onBeforeCompile = (shader) => {
+                    shader.uniforms.usweep = child.userData.sweepuni
+                    shader.fragmentShader = `uniform float usweep;\n` + shader.fragmentShader;
+                    const sweeplogic = rever
+                    ? `float mask = step(1.0 - usweep, vUv.x);`
+                    : `float mask = step(vUv.x, usweep);`;
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        `#include <emissivemap_fragment>`,
+                        `#include <emissivemap_fragment>
+                        ${sweeplogic}
+                        totalEmissiveRadiance *= mask;
+                        `
+                    )
+                    
                 }
                 arraystore.push(child);
             }
@@ -298,7 +343,7 @@ function loadmodel(modelpath){
 loader.load(modelpath, (gltf) => {
     const carModel = gltf.scene;
     currentmodel = carModel;
-    if(modelpath.includes('aston') || modelpath.includes('modelDraco8')){ aston(carModel, carparts);
+    if(modelpath.includes('modelDraco8')){ aston(carModel, carparts);
         intcamerapos.set(0.27, 0.69, -0.3);
         intcamtarget.set(0.27, 0.68, -0.29);
         const astonbg = new THREE.Color('#b9afae')
@@ -332,7 +377,66 @@ loader.load(modelpath, (gltf) => {
         groundlightr.position.set(-0.5,0.5,-1.2)
        
         
-    }else{
+    }else if(modelpath.includes('modelDraco10')){
+        intcamerapos.set(0.7, 2, -0.4);
+        intcamtarget.set(0.7, 1.9, -0.2);
+        const enginecover = carModel.getObjectByName('Object_306');
+            const rrbg = new THREE.Color('#ffbb00')
+            scene.background = rrbg
+            scene.fog.color = rrbg
+            floor.material.color = new THREE.Color('#1a1a1a')
+            
+
+
+ const stripright = carModel.getObjectByName('rightblinker');
+    const stripleft = carModel.getObjectByName('leftblinker');
+    const doorRight = carModel.getObjectByName('doorrf');
+    const doorLeft = carModel.getObjectByName('doorlb');
+    const bonnet = carModel.getObjectByName('Object_302');
+    const trunk = carModel.getObjectByName('Object_230');
+    if (doorRight) {
+        doorRight.userData = { isOpen: false, targetRotation: 0, axis: 'y' };
+        carparts.push(doorRight);
+    }
+    if (doorLeft) {
+        doorLeft.userData = { isOpen: false, targetRotation: 0, axis: 'y', inverse: true  };
+        carparts.push(doorLeft);
+    }
+    if (bonnet) {
+        bonnet.userData = { isOpen: false, targetRotation: 0, axis: 'x', inverse: true }; 
+        carparts.push(bonnet);
+    }
+    if (trunk) {
+        trunk.userData = { isOpen: false, targetRotation: 0, axis: 'x', };
+        carparts.push(trunk);
+    }
+    if (enginecover) {
+        enginecover.userData = { isOpen: false, targetRotation: 0, axis: 'x', inverse: true };
+        carparts.push(enginecover);
+        
+    }
+    leftbeam.position.set(2, 2, 4);
+        leftbeam.target.position.set(2, 0.1, 10);
+         
+        
+        leftbeam2.position.set(2, 2, 4);
+        leftbeam2.target.position.set(2, 0.1, 10);
+        
+        rightbeam.position.set(-2,2,4);
+        rightbeam.target.position.set(-2, 0.1, 10);
+        rightbeam2.position.set(-2,2, 4);
+        rightbeam2.target.position.set(-2, 0.1, 10);
+        groundlightl.position.set(1.4,1,-3)
+        groundlightr.position.set(-0.2,1,-3)
+        
+        sweeper(stripleft, 0xffaa00, leftdrlmesh, false)
+        sweeper(stripright, 0xffaa00, rightdrlmesh, true)
+
+
+
+    }
+    
+    else{
             intcamerapos.set(-0.4, 1.2, -0.4);
             intcamtarget.set(-0.4, 1.1, -0.2);
             const enginecover = carModel.getObjectByName('Object_306');
@@ -582,16 +686,25 @@ function animate() {
     function updatedrl(meshes, isblinking){
         meshes.forEach(mesh => {
             if(isblinking || ishazaon){
-                mesh.material.emissive.setHex(0xffaa00);
-                mesh.material.emissiveIntensity = flashinte;
+                mesh.material.emissive.setHex(0xffaa00)
+                if(mesh.userData.sweepuni){
+                    mesh.material.emissiveIntensity = 15;
+                    mesh.userData.sweepuni.value = (Date.now() * 0.0025) % 2
 
-            }else{
-                mesh.material.emissive.setHex(mesh.userData.orginalColor);
-                if(mesh.userData.originalColor === 0xffaa00){
-                mesh.material.emissiveIntensity =0;}else{
-                    mesh.material.emissiveIntensity = isheadon ? 2:0
+                }else{
+                    mesh.material.emissiveIntensity = flashinte;
+                }
+            }else {
+                mesh.material.emissive.setHex(mesh.userData.orginalColor)
+                if(mesh.userData.orginalColor === 0xffaa00){
+                    mesh.material.emissiveIntensity = 0
+                }else{
+                    mesh.material.emissiveIntensity = isheadon ? 2:0;
                 }
 
+                if(mesh.userData.sweepuni){
+                    mesh.userData.sweepuni.value = 1;
+                }
             }
         })
     }
