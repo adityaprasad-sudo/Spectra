@@ -14,7 +14,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 import { aston } from './Am.js';
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 200);
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 200);
 camera.position.set(4, 2, 5); 
 const dome = new THREE.PointLight(0xffffff, 0);
 dome.distance = 2;
@@ -70,9 +70,12 @@ const leftbeam = new THREE.SpotLight(0xffffff,0)
 const rightbeam = new THREE.SpotLight(0xffffff,0)
 const leftbeam2 = new THREE.SpotLight(0xffffff,0)
 const rightbeam2 = new THREE.SpotLight(0xffffff,0)
+const spot  = new THREE.PointLight(0xffffff,0,10,0.2)
 const groundlightl = new THREE.PointLight(0xffffff, 0, 5)
 const groundlightr = new THREE.PointLight(0xffffff, 0, 5)
 const groundtail = new THREE.PointLight(0xffffff, 0, 5)
+spot.castShadow = false
+spot.position.set(0,3,0)
 groundlightl.castShadow = false
 groundlightr.castShadow = false
 groundtail.castShadow = false
@@ -87,7 +90,7 @@ rightbeam2.penumbra = 0.5;
 let leftdrlmesh = []
 let rightdrlmesh = [];
 let drlstripmesh = []
-
+scene.add(spot)
 renderer.shadowMap.type = THREE.VSMShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping
 renderer.toneMappingExposure = 0.7
@@ -95,11 +98,11 @@ const bg = new THREE.Color('#1b1b1b')
 scene.background = bg
 scene.fog = new THREE.Fog(bg, 20, 50);
 const geo = new THREE.PlaneGeometry(100, 100);
-const mat = new THREE.MeshLambertMaterial({ color: bg})
+const mat = new THREE.MeshPhongMaterial({ color: bg, shininess:0.7 });
 const floor = new THREE.Mesh(geo, mat);
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = 0;
-floor.receiveShadow = true;
+floor.receiveShadow = false;
 scene.add(floor);
 const ambientLight = new THREE.AmbientLight(0xffffff, 1); 
 
@@ -110,7 +113,8 @@ const listen = new THREE.AudioListener();
 camera.add(listen);
 const enginesound = new THREE.PositionalAudio(listen);
 const audioloader = new THREE.AudioLoader();
-audioloader.load('./engine.mp3', (buffer) => {
+let difengine = null
+audioloader.load(difengine, (buffer) => {
     enginesound.setBuffer(buffer);
     enginesound.setRefDistance(3);
     enginesound.setVolume(0.6);
@@ -247,7 +251,7 @@ document.getElementById('btnview').addEventListener('click' , () => {
             camera.rotation.y = Math.PI
             camera.position.copy(intcamerapos);
             controls.target.copy(intcamtarget);
-            ambientLight.intensity = 2
+            ambientLight.intensity = 0
             dome.intensity = 5
             
         }else{
@@ -344,6 +348,7 @@ loader.load(modelpath, (gltf) => {
     const carModel = gltf.scene;
     currentmodel = carModel;
     if(modelpath.includes('modelDraco8')){ aston(carModel, carparts);
+        difengine = new Audio('./astonmartin.mp3')
         intcamerapos.set(0.27, 0.69, -0.3);
         intcamtarget.set(0.27, 0.68, -0.29);
         const astonbg = new THREE.Color('#b9afae')
@@ -373,9 +378,9 @@ loader.load(modelpath, (gltf) => {
         emissive(lowrb, 0xffffff, lbmesh);
         emissive(highlb, 0xffffff, hbmesh);
         emissive(taillight, 0xff0000, tlmesh);
-        groundlightl.position.set(0.4,0.5,-1.2)
-        groundlightr.position.set(-0.5,0.5,-1.2)
-       
+        groundlightl.position.set(0.4,0.3,-1.2)
+        groundlightr.position.set(-0.5,0.3,-1.1)
+        spot.intensity = 4
         
     }else if(modelpath.includes('modelDraco10')){
         intcamerapos.set(0.7, 2, -0.4);
@@ -385,7 +390,7 @@ loader.load(modelpath, (gltf) => {
             scene.background = rrbg
             scene.fog.color = rrbg
             floor.material.color = new THREE.Color('#1a1a1a')
-            
+            spot.intensity = 0
 
 
  const stripright = carModel.getObjectByName('rightblinker');
@@ -437,6 +442,7 @@ loader.load(modelpath, (gltf) => {
     }
     
     else{
+            difengine = new Audio('./RollsEngine.mp3')
             intcamerapos.set(-0.4, 1.2, -0.4);
             intcamtarget.set(-0.4, 1.1, -0.2);
             const enginecover = carModel.getObjectByName('Object_306');
