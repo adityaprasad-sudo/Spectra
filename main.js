@@ -20,6 +20,8 @@ const dome = new THREE.PointLight(0xffffff, 0);
 dome.distance = 2;
 camera.add(dome);
 scene.add(camera);
+let editmode = false
+let drop = false
 const btnmenu = document.getElementById('btnmenu');
 const modeldrawer = document.getElementById('modeldrawer');
 const loading = document.getElementById('loadingscreen');
@@ -93,7 +95,7 @@ let drlstripmesh = []
 scene.add(spot)
 renderer.shadowMap.type = THREE.VSMShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping
-renderer.toneMappingExposure = 0.7
+renderer.toneMappingExposure = 1
 const bg = new THREE.Color('#1b1b1b')
 scene.background = bg
 scene.fog = new THREE.Fog(bg, 20, 50);
@@ -113,15 +115,100 @@ const listen = new THREE.AudioListener();
 camera.add(listen);
 const enginesound = new THREE.PositionalAudio(listen);
 const audioloader = new THREE.AudioLoader();
-let difengine = null
-audioloader.load(difengine, (buffer) => {
-    enginesound.setBuffer(buffer);
-    enginesound.setRefDistance(3);
-    enginesound.setVolume(0.6);
-})
+enginesound.setRefDistance(3)
+enginesound.setVolume(0.6)
+function enginesounddif(soundurl){
+    if(enginesound.isPlaying){
+        enginesound.stop()
+    }
+    ectasyup = false
+    screenopen = false
+    audioloader.load(soundurl, (buffer) => {
+        enginesound.setBuffer(buffer);
+        
+    });
+}
+const debugHUD = document.createElement('div');
+debugHUD.style.cssText = "position:absolute; top:20px; left:90px; background:rgba(0,0,0,0.7); color:#00ffcc; padding:15px; font-family:monospace; font-size: 14px; border-radius: 8px; z-index:1000; pointer-events:none;";
+document.body.appendChild(debugHUD);
 const renderScene = new RenderPass(scene, camera);
+const poses = [
+    { pos: new THREE.Vector3(-1.2,2.924,4.772), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(1.564,2.446,4.571), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(3.975,2.636,2.601), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(4.469,2.605,-1.650), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(2.681,2.668,-3.904), target: new THREE.Vector3(0,0.5,0), fov: 60 }
+    ,{pos : new THREE.Vector3(2.462,2.462,-6.272), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-0.729,2.292,-6.423), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    { pos: new THREE.Vector3(-3.452,2.668,-5.391), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-5.594,2.799,-2.901), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-6.1,2.757,1.640), target: new THREE.Vector3(0,0.5,0), fov:60 },
+    {pos: new THREE.Vector3(-4.120,2.799,4.769), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-2.671,2.006,3.996), target: new THREE.Vector3(0,0.5,0), fov:60 }
+    ,
+    {pos: new THREE.Vector3(0.324,1.071,3.650), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    { pos: new THREE.Vector3(-1.909,1.022,3.126), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-0.039,1.097,-5.174), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(2.060,1.097,-4.746), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(0.915,0.650,2.853), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-1.675,1.990,-1.993), target: new THREE.Vector3(0,0.5,0), fov: 60 }
+    ,{pos : new THREE.Vector3(2.455,1.884,-1.029), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(0.324,1.071,3.650), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    { pos: new THREE.Vector3(-1.909,1.022,3.126), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-0.039,1.097,-5.174), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(2.060,1.097,-4.746), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(0.915,0.650,2.853), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-1.675,1.990,-1.993), target: new THREE.Vector3(0,0.5,0), fov: 60 }
+    ,{pos : new THREE.Vector3(2.455,1.884,-1.029), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    
+]
+const posesam = [
+    { pos: new THREE.Vector3(-1.101,0.650,2.787), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(1.121, 0.650, 2.779), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(3.975,2.636,2.601), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(4.469,2.605,-1.650), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(2.681,2.668,-3.904), target: new THREE.Vector3(0,0.5,0), fov: 60 }
+    ,{pos : new THREE.Vector3(2.462,2.462,-6.272), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-0.729,2.292,-6.423), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    { pos: new THREE.Vector3(-3.452,2.668,-5.391), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-5.594,2.799,-2.901), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-6.1,2.757,1.640), target: new THREE.Vector3(0,0.5,0), fov:60 },
+    {pos: new THREE.Vector3(-4.120,2.799,4.769), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-2.671,2.006,3.996), target: new THREE.Vector3(0,0.5,0), fov:60 }
+    ,
+    {pos: new THREE.Vector3(0.324,1.071,3.650), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    { pos: new THREE.Vector3(-1.909,1.022,3.126), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-0.039,1.097,-5.174), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(2.060,1.097,-4.746), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(0.915,0.650,2.853), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-1.675,1.990,-1.993), target: new THREE.Vector3(0,0.5,0), fov: 60 }
+    ,{pos : new THREE.Vector3(2.455,1.884,-1.029), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(0.324,1.071,3.650), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    { pos: new THREE.Vector3(-1.536,0.600,-1.277), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(-0.811,0.600,1.825), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(0.972,0.6,1.745), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(0.015,0.600,-1.997), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+    {pos: new THREE.Vector3(0.668,0.6,-1.883), target: new THREE.Vector3(0,0.5,0), fov: 60 }
+    ,{pos : new THREE.Vector3(-0.652,0.6,-1.888), target: new THREE.Vector3(0,0.5,0), fov: 60 },
+]
+const posesfe = [
+    { pos: new THREE.Vector3(-3.17,2.026,7.295), target: new THREE.Vector3(0,0.5,0), fov: 90 },
+    {pos: new THREE.Vector3(2.237,22.237,7.419), target: new THREE.Vector3(0,0.5,0), fov: 90 },
+    {pos: new THREE.Vector3(-0.032,2.771,9.384), target: new THREE.Vector3(0,0.5,0), fov: 80 },
+    {pos: new THREE.Vector3(2.062,1.004,-3.850), target: new THREE.Vector3(0,0.5,0), fov: 85 },
+    {pos: new THREE.Vector3(3.888,2.926,3.511), target: new THREE.Vector3(0,0.5,0), fov: 95 }
+    ,{pos : new THREE.Vector3(-4.098,2.750,3.412), target: new THREE.Vector3(0,0.5,0), fov: 95 },
+    {pos: new THREE.Vector3(-2.566,2,-5.867), target: new THREE.Vector3(0,0.5,0), fov: 100 },
+    {pos: new THREE.Vector3(2.582,2.140,-6.708), target: new THREE.Vector3(0,0.5,0), fov: 100 },
+    {pos: new THREE.Vector3(0.076,3.13,-10.022), target: new THREE.Vector3(0,0.5,0), fov: 100 },
+    {pos: new THREE.Vector3(0.037,3.532,-4.850), target: new THREE.Vector3(0,0.5,0), fov: 100 },
+    {pos: new THREE.Vector3(-0.048,7.445,9.411), target: new THREE.Vector3(0,0.5,0), fov: 100 }
+]
 
-
+let currentpose = poses
+let indexsho = 0
+let beattime = 0
+const beatcooldown = 200
 const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight), 
     0.2,
@@ -159,7 +246,88 @@ if(slidermsaa && msaareadout){
 document.body.appendChild(renderer.domElement);
 const sceneren = new RenderPass(scene, camera);
 
+let campos = new THREE.Vector3(4, 2, 5);
+let camlock = new THREE.Vector3(0, 0, 0);
+let ambientlight = 1;
+let fov = 60;
+const song = new THREE.Audio(listen)
+const drums = new THREE.Audio(listen)
+const music = new THREE.Audio(listen)
+const vocal = new THREE.Audio(listen)
+let analyzedrum = null
+let analyzevocal = null
+let analyzepiano = null
 
+audioloader.load('./song.mp3', (buffer) => {
+    song.setBuffer(buffer);
+    song.setVolume(0.5);
+    
+})
+audioloader.load('./vocals.mp3', (buffer) => {
+    vocal.setBuffer(buffer);
+    vocal.setVolume(0.5);
+    analyzevocal = new THREE.AudioAnalyser(vocal, 128)
+})
+audioloader.load('./drums.mp3', (buffer) => {
+    drums.setBuffer(buffer);
+    drums.setVolume(0.5);
+    analyzedrum = new THREE.AudioAnalyser(drums, 128)
+})
+audioloader.load('./music.mp3', (buffer) => {
+    music.setBuffer(buffer);
+    music.setVolume(0.5);
+    analyzepiano = new THREE.AudioAnalyser(music, 128)
+})
+const btnedit = document.getElementById('btnedit')
+if(btnedit){
+    btnedit.addEventListener('click', () => {
+        editmode = !editmode    
+        if(editmode){
+            drop = true
+            controls.enabled = false
+            if(!enginesound.isPlaying){
+                enginesound.play()
+                ectasyup = true
+                screenopen = true
+            }
+            if(!song.isPlaying){
+                song.play()
+                vocal.play()
+                drums.play()
+                music.play()
+            }
+            indexsho = 0
+            campos.copy(currentpose[indexsho].pos)
+            camlock.copy(curentpose[indexsho].target)
+            fov = currentpose[indexsho].fov
+            camera.position.copy(campos)
+            controls.target.copy(camlock)
+            ambientlight = 0.02
+            
+            
+        }else{
+            drop = false
+            controls.enabled = true
+            if(song.isPlaying){
+                song.stop()
+                vocal.stop()
+                drums.stop()
+                music.stop()
+            }
+            campos.set(4,2,5)
+            camlock.set(0,0,0)
+            ambientlight = 1
+            fov = 60
+            camera.fov = fov
+            camera.updateProjectionMatrix();
+            isheadon = false
+            lightmode = 0
+            carparts.forEach(part => {
+                part.userData.isOpen = false
+            })
+        }
+    })
+}
 let screencover = null
 let screenopen = false
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -306,6 +474,7 @@ document.getElementById('btnlights').addEventListener('click' , () => {
 
 let carparts = []; 
 function glowtex (colorhex) {
+    
     const canvas = document.createElement('canvas');
     canvas.width = 64;
     canvas.height = 64;
@@ -327,6 +496,9 @@ const glowmaterial = new THREE.SpriteMaterial({
     blending: THREE.AdditiveBlending,
     depthWrite: false
 })
+
+let minzo = 3
+let maxzo = 9;
     let leftindiglow = new THREE.Sprite(glowmaterial);
 let rightindiglow = new THREE.Sprite(glowmaterial);
 let currentmodel = null
@@ -347,8 +519,13 @@ function loadmodel(modelpath){
 loader.load(modelpath, (gltf) => {
     const carModel = gltf.scene;
     currentmodel = carModel;
-    if(modelpath.includes('modelDraco8')){ aston(carModel, carparts);
-        difengine = new Audio('./astonmartin.mp3')
+    if(modelpath.includes('astonDraco')){ aston(carModel, carparts);
+        currentpose = posesam
+        indexsho = 0
+        minzo = 2
+        maxzo = 5
+
+        enginesounddif('./astonmartin.mp3')
         intcamerapos.set(0.27, 0.69, -0.3);
         intcamtarget.set(0.27, 0.68, -0.29);
         const astonbg = new THREE.Color('#b9afae')
@@ -372,6 +549,16 @@ loader.load(modelpath, (gltf) => {
     const lowrb = carModel.getObjectByName('Object_175.021');
     const highrb = carModel.getObjectByName('Object_256');
     const taillight = carModel.getObjectByName('Object_460');
+    const bonnet = carModel.getObjectByName('Object_612');
+    const trunk = carModel.getObjectByName('Object_29');
+    if (bonnet) {
+        bonnet.userData = { isOpen: false, targetRotation: 0, axis: 'x' }; 
+        carparts.push(bonnet);
+    }
+    if (trunk) {
+        trunk.userData = { isOpen: false, targetRotation: 0, axis: 'x'  };
+        carparts.push(trunk);
+    }
 
         emissive(blinkleft, 0xffaa00, leftdrlmesh);
         emissive(blinkright, 0xffaa00, rightdrlmesh);
@@ -383,6 +570,10 @@ loader.load(modelpath, (gltf) => {
         spot.intensity = 4
         
     }else if(modelpath.includes('modelDraco10')){
+        minzo = 6
+        maxzo = 12
+        currentpose = posesfe
+        indexsho = 0
         intcamerapos.set(0.7, 2, -0.4);
         intcamtarget.set(0.7, 1.9, -0.2);
         const enginecover = carModel.getObjectByName('Object_306');
@@ -442,7 +633,10 @@ loader.load(modelpath, (gltf) => {
     }
     
     else{
-            difengine = new Audio('./RollsEngine.mp3')
+        currentpose = poses
+        indexsho = 0
+                    enginesounddif('./RollsEngine.mp3')
+
             intcamerapos.set(-0.4, 1.2, -0.4);
             intcamtarget.set(-0.4, 1.1, -0.2);
             const enginecover = carModel.getObjectByName('Object_306');
@@ -559,15 +753,16 @@ loader.load(modelpath, (gltf) => {
     
     carModel.add(leftbeam);
     carModel.add(leftbeam.target);
-    carModel.add(leftbeam2);
+    carModel.add(leftbeam2)
+    carModel.add(enginesound)
     carModel.add(leftbeam2.target);
-    carModel.add(groundlightl);
+    carModel.add(groundlightl)
     carModel.add(groundlightr);
     carModel.add(groundtail)
-    carModel.add(rightbeam);
+    carModel.add(rightbeam)
     carModel.add(rightbeam.target);
     carModel.add(rightbeam2);
-    carModel.add(rightbeam2.target);
+    carModel.add(rightbeam2.target)
     updateraycaster(camera, carparts);
 
 }, undefined, (error) => console.error(error));}
@@ -581,16 +776,29 @@ document.querySelectorAll('.carcard').forEach(card => {
 })
 
 let zoom = camera.position.distanceTo(controls.target);
-const minzo = 3
-const maxzo = 9;
+
 window.addEventListener('wheel', (event) => {
     const direction = Math.sign(event.deltaY);
     zoom += direction * 1.5
     zoom = THREE.MathUtils.clamp(zoom, minzo, maxzo);
 })
+let shake = 0;
 
 function animate() {
     requestAnimationFrame(animate)
+    if(debugHUD) {
+        debugHUD.innerHTML = `
+            <b>CAMERA POS:</b> <br>
+            x: ${camera.position.x.toFixed(3)} <br>
+            y: ${camera.position.y.toFixed(3)} <br>
+            z: ${camera.position.z.toFixed(3)} <br><br>
+            
+            <b>TARGET LOOK:</b> <br>
+            x: ${controls.target.x.toFixed(3)} <br>
+            y: ${controls.target.y.toFixed(3)} <br>
+            z: ${controls.target.z.toFixed(3)}
+        `;
+    }
     if(ectasy && covermesh){
         if(ectasyup){
             covermesh.position.y = THREE.MathUtils.lerp(covermesh.position.y, covermesh.userData.downY, 0.2)
@@ -618,7 +826,7 @@ function animate() {
             if(Math.abs(screencover.position.y - screencover.userData.closedy) < 0.01){screencover.rotation.x = THREE.MathUtils.lerp(screencover.rotation.x, screencover.userData.closedrotx, 0.1)} 
         }
     }
-    if(!isintview){
+    if(!isintview && !editmode ){
     if(isNaN(camera.position.x) || isNaN(controls.target.x)){
         camera.position.set(4, 2, 5)
         controls.target.set(0, 0, 0)
@@ -629,6 +837,8 @@ function animate() {
         const direc = new THREE.Vector3().subVectors(camera.position, controls.target).normalize()
         camera.position.copy(controls.target).add(direc.multiplyScalar(newdis));
     }}
+    ambientLight.intensity = THREE.MathUtils.lerp(ambientLight.intensity, ambientlight, 0.1)
+    
     const time = Date.now() * 0.003;
     let wavelight = Math.pow(Math.sin(time), 4);
     const flashinte = wavelight*16
@@ -670,7 +880,7 @@ function animate() {
         mesh.material.emissiveIntensity = high;
     })
     tlmesh.forEach(mesh => {
-        mesh.material.emissiveIntensity = tail;
+        mesh.material.emissiveIntensity =   tail;
     })
     let tailgloe = tail > 0 ? 2:0;
     if(leftblink || ishazaon){
@@ -689,6 +899,75 @@ function animate() {
         groundlightr.color.setHex(0xff0000);
         groundlightr.intensity = tailgloe;
     }
+    if(editmode){
+       
+        if(analyzepiano && analyzedrum && analyzevocal){
+            const drumvol  = analyzedrum.getAverageFrequency();
+            const painofreq = analyzepiano.getFrequencyData();
+            const vocalfrq = analyzevocal.getFrequencyData();
+            const paipeak = painofreq[25]
+            const vocalpeak = vocalfrq[29]
+            
+            console.log(drumvol, vocalpeak)
+            const now = Date.now()
+            if(camera.userData.fovOffset === undefined) camera.userData.fovOffset = 0;
+            if(camera.userData.lightpulse === undefined) camera.userData.lightpulse = 0
+            if((paipeak>40 || vocalpeak>70) && (now-beattime) > beatcooldown){
+                
+                beattime = now
+                indexsho = (indexsho + 1) % currentpose.length;
+                
+                campos.copy(currentpose[indexsho].pos)
+                camlock.copy(currentpose[indexsho].target)
+                fov = currentpose[indexsho].fov
+                camera.userData.fovOffset -= 30;
+                shake = 0.8
+                isheadon=true
+                lightmode = 2
+                ishazaon= true
+                lbmesh.forEach(mesh => mesh.material.emissiveIntensity = 50);
+                hbmesh.forEach(mesh => mesh.material.emissiveIntensity = 50);
+                
+            }
+            if(drumvol > 20 && (now-beattime) > beatcooldown ){
+                beattime = now
+                camera.userData.lightpulse = 100
+            }
+            const sway = now * 0.001;
+            const swayx = Math.cos(sway * 2) * 0.15
+            const swayy = Math.sin(sway * 2) * 0.15
+            const finalcam = new THREE.Vector3().copy(campos).add(new THREE.Vector3(swayx, swayy, 0))
+            if(shake > 0){
+                const shaku = shake * shake * 0.4;
+                finalcam.x += (Math.random() - 0.5) * shaku;
+                finalcam.y += (Math.random() - 0.5) * shaku;
+                finalcam.z += (Math.random() - 0.5) * shaku;
+                shake *= 0.85; 
+                if(shake < 0.01) shake = 0;}
+                camera.position.copy(finalcam);
+            controls.target.copy(camlock);
+            
+            camera.userData.fovOffset *= 0.8; 
+            camera.fov = fov + camera.userData.fovOffset; 
+            camera.updateProjectionMatrix();
+            const loudest = Math.max(paipeak, vocalpeak);
+            const snap = Math.pow(loudest/255, 4);
+            camera.userData.lightpulse *=0.85
+            beaminten = camera.userData.lightpulse;
+            leftbeam.intensity = beaminten; rightbeam.intensity = beaminten;
+            leftbeam2.intensity = beaminten; rightbeam2.intensity = beaminten;
+            console.log(snap)
+            const glowLevel = camera.userData.lightpulse;
+            lbmesh.forEach(mesh => mesh.material.emissiveIntensity = glowLevel);
+            hbmesh.forEach(mesh => mesh.material.emissiveIntensity = glowLevel);
+            tlmesh.forEach(mesh => mesh.material.emissiveIntensity = glowLevel * 0.5);
+            }
+            }
+
+        
+
+    
+    
     function updatedrl(meshes, isblinking){
         meshes.forEach(mesh => {
             if(isblinking || ishazaon){
@@ -731,9 +1010,9 @@ function animate() {
             part.rotation.y = THREE.MathUtils.lerp(part.rotation.y, targetY, 0.08);
         } else {
             const axis = part.userData.axis
-            let target = part.userData.targetRotation
-            if(part.userData.inverse) target = -target;
-            part.rotation[axis] = THREE.MathUtils.lerp(part.rotation[axis], target, 0.08);
+            let targetangle = part.userData.isOpen ? (Math.PI/3) : 0
+            if(part.userData.inverse) targetangle = -targetangle;
+            part.rotation[axis] = THREE.MathUtils.lerp(part.rotation[axis], targetangle, 0.08);
         }
     });
 

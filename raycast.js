@@ -22,6 +22,7 @@ import * as THREE from 'three';
         const intersects = raycaster.intersectObjects(currentcarparts,true);
         if (intersects.length > 0) {
             let selectmesh = intersects[0].object;
+            console.log(selectmesh)
             let target = null;
             selectmesh.traverseAncestors((ancestor) => {
                 if(currentcarparts.includes(ancestor)) target = ancestor;
