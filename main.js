@@ -3,16 +3,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {PMREMGenerator}from 'three';
-import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
 import { GroundProjectedSkybox } from 'three/addons/objects/GroundProjectedSkybox.js';
-import { updateraycaster } from './raycast.js';
+import { updateraycaster } from './Additionalscripts/raycast.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass} from 'three/addons/postprocessing/OutputPass.js';
-import { aston } from './Am.js';
+import { aston } from './Additionalscripts/Am.js';
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 200);
 camera.position.set(4, 2, 5); 
@@ -50,14 +50,21 @@ let isintview = false
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight)
+
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 const gen = new PMREMGenerator(renderer);
 gen.compileEquirectangularShader();
-const oaderchig= new EXRLoader(manager);
-oaderchig.load('./1234.exr', (texture) => {
+const oaderchig= new RGBELoader(manager);
+let skybox;
+oaderchig.load('./hdris/hrdi.hdr', (texture) => {
     const envmap = gen.fromEquirectangular(texture).texture;
     scene.environment = envmap;
     scene.environmentIntensity = 1.2;
+    skybox = new GroundProjectedSkybox(texture);
+    skybox.scale.setScalar(100)
+    skybox.radius = 70
+    skybox.height = 10
+    scene.add(skybox);
     texture.dispose();
 })
 btnmenu.addEventListener('click', () => {
@@ -96,16 +103,7 @@ scene.add(spot)
 renderer.shadowMap.type = THREE.VSMShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping
 renderer.toneMappingExposure = 1
-const bg = new THREE.Color('#1b1b1b')
-scene.background = bg
-scene.fog = new THREE.Fog(bg, 20, 50);
-const geo = new THREE.PlaneGeometry(100, 100);
-const mat = new THREE.MeshPhongMaterial({ color: bg, shininess:0.7 });
-const floor = new THREE.Mesh(geo, mat);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = 0;
-floor.receiveShadow = false;
-scene.add(floor);
+
 const ambientLight = new THREE.AmbientLight(0xffffff, 1); 
 
 let ectasy = null;
@@ -128,9 +126,6 @@ function enginesounddif(soundurl){
         
     });
 }
-const debugHUD = document.createElement('div');
-debugHUD.style.cssText = "position:absolute; top:20px; left:90px; background:rgba(0,0,0,0.7); color:#00ffcc; padding:15px; font-family:monospace; font-size: 14px; border-radius: 8px; z-index:1000; pointer-events:none;";
-document.body.appendChild(debugHUD);
 const renderScene = new RenderPass(scene, camera);
 const poses = [
     { pos: new THREE.Vector3(-1.2,2.924,4.772), target: new THREE.Vector3(0,0.5,0), fov: 60 },
@@ -211,9 +206,9 @@ let beattime = 0
 const beatcooldown = 200
 const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight), 
-    0.2,
-    0.8, 
-    0.8
+    0.01,
+    0.3, 
+    0.3
 );
 
 const outputPass = new OutputPass();
@@ -258,22 +253,22 @@ let analyzedrum = null
 let analyzevocal = null
 let analyzepiano = null
 
-audioloader.load('./song.mp3', (buffer) => {
+audioloader.load('./music/song.mp3', (buffer) => {
     song.setBuffer(buffer);
     song.setVolume(0.5);
     
 })
-audioloader.load('./vocals.mp3', (buffer) => {
+audioloader.load('./music/vocals.mp3', (buffer) => {
     vocal.setBuffer(buffer);
     vocal.setVolume(0.5);
     analyzevocal = new THREE.AudioAnalyser(vocal, 128)
 })
-audioloader.load('./drums.mp3', (buffer) => {
+audioloader.load('./music/drums.mp3', (buffer) => {
     drums.setBuffer(buffer);
     drums.setVolume(0.5);
     analyzedrum = new THREE.AudioAnalyser(drums, 128)
 })
-audioloader.load('./music.mp3', (buffer) => {
+audioloader.load('./music/music.mp3', (buffer) => {
     music.setBuffer(buffer);
     music.setVolume(0.5);
     analyzepiano = new THREE.AudioAnalyser(music, 128)
@@ -522,16 +517,45 @@ loader.load(modelpath, (gltf) => {
     if(modelpath.includes('astonDraco')){ aston(carModel, carparts);
         currentpose = posesam
         indexsho = 0
+        const texsha = new THREE.TextureLoader(manager).load('./shadowmaps/astonshadow.png');
+            const geosha = new THREE.PlaneGeometry(6.5, 10);
+            const matsha = new THREE.ShaderMaterial({
+                transparent: true,
+                depthWrite: false,
+                uniforms:{
+                    tDiffuse:{value:texsha},
+                    shadowColor:{value: new THREE.Color(0x000000)}
+                },
+                vertexShader:`
+                    varying vec2 vUv;
+                    void main(){
+                        vUv = uv;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }`,
+                fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform vec3 shadowColor;
+                varying vec2 vUv;
+                void main(){
+                    vec4 tex = texture2D(tDiffuse, vUv);
+                    float alpha = 1.0 - tex.r;
+                    gl_FragColor = vec4(shadowColor, alpha*0.99);
+                }`
+            })
+            const bakedplane = new THREE.Mesh(geosha, matsha);
+           
+            bakedplane.rotation.x = -Math.PI/2
+            bakedplane.position.set(0,0.01,0)
+            carModel.add(bakedplane)
         minzo = 2
         maxzo = 5
 
-        enginesounddif('./astonmartin.mp3')
+        enginesounddif('./carsounds/astonmartin.mp3')
         intcamerapos.set(0.27, 0.69, -0.3);
         intcamtarget.set(0.27, 0.68, -0.29);
-        const astonbg = new THREE.Color('#b9afae')
-        scene.background = astonbg
-        scene.fog.color = astonbg
-        floor.material.color = new THREE.Color('#1a1a1a')
+        
+        
+        
         leftbeam.position.set(1, 1, 1); 
         leftbeam.target.position.set(-0.8, 0.4, 10);
         leftbeam2.position.set(1, 1, 1);
@@ -570,6 +594,39 @@ loader.load(modelpath, (gltf) => {
         spot.intensity = 4
         
     }else if(modelpath.includes('modelDraco10')){
+        enginesounddif('./carsounds/Ferrariengine.mp3')
+        intcamerapos.set(0.27, 0.69, -0.3);
+        intcamtarget.set(0.27, 0.68, -0.29);
+        const texsha = new THREE.TextureLoader(manager).load('./shadowmaps/ferrari.png');
+            const geosha = new THREE.PlaneGeometry(14, 19);
+            const matsha = new THREE.ShaderMaterial({
+                transparent: true,
+                depthWrite: false,
+                uniforms:{
+                    tDiffuse:{value:texsha},
+                    shadowColor:{value: new THREE.Color(0x000000)}
+                },
+                vertexShader:`
+                    varying vec2 vUv;
+                    void main(){
+                        vUv = uv;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }`,
+                fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform vec3 shadowColor;
+                varying vec2 vUv;
+                void main(){
+                    vec4 tex = texture2D(tDiffuse, vUv);
+                    float alpha = 1.0 - tex.r;
+                    gl_FragColor = vec4(shadowColor, alpha*0.99);
+                }`
+            })
+            const bakedplane = new THREE.Mesh(geosha, matsha);
+            
+            bakedplane.rotation.x = -Math.PI/2
+            bakedplane.position.set(0,0.01,0)
+            carModel.add(bakedplane)
         minzo = 6
         maxzo = 12
         currentpose = posesfe
@@ -577,10 +634,10 @@ loader.load(modelpath, (gltf) => {
         intcamerapos.set(0.7, 2, -0.4);
         intcamtarget.set(0.7, 1.9, -0.2);
         const enginecover = carModel.getObjectByName('Object_306');
-            const rrbg = new THREE.Color('#ffbb00')
-            scene.background = rrbg
-            scene.fog.color = rrbg
-            floor.material.color = new THREE.Color('#1a1a1a')
+            const rrbg = new THREE.Color('#1b1b1b')
+            
+            
+            
             spot.intensity = 0
 
 
@@ -632,18 +689,47 @@ loader.load(modelpath, (gltf) => {
 
     }
     
-    else{
+    else{const texsha = new THREE.TextureLoader(manager).load('./shadowmaps/shadow.png');
+            const geosha = new THREE.PlaneGeometry(6.5, 10);
+            const matsha = new THREE.ShaderMaterial({
+                transparent: true,
+                depthWrite: false,
+                uniforms:{
+                    tDiffuse:{value:texsha},
+                    shadowColor:{value: new THREE.Color(0x000000)}
+                },
+                vertexShader:`
+                    varying vec2 vUv;
+                    void main(){
+                        vUv = uv;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }`,
+                fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform vec3 shadowColor;
+                varying vec2 vUv;
+                void main(){
+                    vec4 tex = texture2D(tDiffuse, vUv);
+                    float alpha = 1.0 - tex.r;
+                    gl_FragColor = vec4(shadowColor, alpha*0.99);
+                }`
+            })
+            const bakedplane = new THREE.Mesh(geosha, matsha);
+            bakedplane.rotation.z = -Math.PI/16
+            bakedplane.rotation.x = -Math.PI/2
+            bakedplane.position.set(0,0.01,0)
+            carModel.add(bakedplane)
+               minzo = 3
+               maxzo = 7
         currentpose = poses
         indexsho = 0
-                    enginesounddif('./RollsEngine.mp3')
+                    enginesounddif('./carsounds/RollsEngine.mp3')
 
             intcamerapos.set(-0.4, 1.2, -0.4);
             intcamtarget.set(-0.4, 1.1, -0.2);
             const enginecover = carModel.getObjectByName('Object_306');
             const rrbg = new THREE.Color('#1b1b1b')
-            scene.background = rrbg
-            scene.fog.color = rrbg
-            floor.material.color = rrbg
+            
             
 
 
@@ -735,7 +821,7 @@ loader.load(modelpath, (gltf) => {
         child.castShadow = true;
         child.receiveShadow = true;
         if(child.material){
-            child.material.envMapIntensity = 0.3
+            child.material.envMapIntensity = 1
             child.material.needsUpdate = true
         }
        } 
@@ -766,7 +852,7 @@ loader.load(modelpath, (gltf) => {
     updateraycaster(camera, carparts);
 
 }, undefined, (error) => console.error(error));}
-loadmodel('./modelDraco6.glb')
+loadmodel('./3D_Models/modelDraco6.glb')
 document.querySelectorAll('.carcard').forEach(card => {
     card.addEventListener('click', () => {
     const modelpath = card.getAttribute('data-model');
@@ -786,19 +872,7 @@ let shake = 0;
 
 function animate() {
     requestAnimationFrame(animate)
-    if(debugHUD) {
-        debugHUD.innerHTML = `
-            <b>CAMERA POS:</b> <br>
-            x: ${camera.position.x.toFixed(3)} <br>
-            y: ${camera.position.y.toFixed(3)} <br>
-            z: ${camera.position.z.toFixed(3)} <br><br>
-            
-            <b>TARGET LOOK:</b> <br>
-            x: ${controls.target.x.toFixed(3)} <br>
-            y: ${controls.target.y.toFixed(3)} <br>
-            z: ${controls.target.z.toFixed(3)}
-        `;
-    }
+    
     if(ectasy && covermesh){
         if(ectasyup){
             covermesh.position.y = THREE.MathUtils.lerp(covermesh.position.y, covermesh.userData.downY, 0.2)
@@ -912,7 +986,7 @@ function animate() {
             const now = Date.now()
             if(camera.userData.fovOffset === undefined) camera.userData.fovOffset = 0;
             if(camera.userData.lightpulse === undefined) camera.userData.lightpulse = 0
-            if((paipeak>40 || vocalpeak>70) && (now-beattime) > beatcooldown){
+            if((paipeak>40) && (now-beattime) > beatcooldown){
                 
                 beattime = now
                 indexsho = (indexsho + 1) % currentpose.length;
