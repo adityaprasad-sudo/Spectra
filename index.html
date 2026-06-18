@@ -55,19 +55,20 @@
         }
         .toolbar{
             position: absolute;
-            left: 0; top:0;
-            width: 70px;
-            height: 100vh;
-            background: rgba(10,10,10,0.85);
+            left: 10px; top:30px; bottom: 30px;
+            width: 40px;
+            height: 50vh;
+            background: rgba(10,10,10,0.5);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
-            border-right: 1px solid rgba(255,255,255,0.1);
+            border-right: 1px solid rgba(255,255,255,0.01);
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
             pointer-events: auto;
             z-index: 100;
+            border-radius: 50px;
 
         }
         .iconbtn{
@@ -97,10 +98,6 @@
             top: 0;
             width: 340px;
             height: 100vh;
-            background: rgba(15,15,15,0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255,255,255,0.1);
             padding: 40px 30px;
             box-sizing: border-box;
             box-sizing: border-box;
@@ -108,7 +105,7 @@
             flex-direction: column;
             pointer-events: auto;
             z-index: 90;
-            transform: translateX(-120%);
+            transform: translateX(-150%);
             transition: transform 0.5s cubic-bezier(0.4,0,0.2,1)
         }
         .modeldrawer.open{transform: translateX(0);}
@@ -141,9 +138,51 @@
             text-transform: uppercase;
             text-align: center;
         }
+        .graphicsmenu{
+            position: absolute; 
+            top: 215px; 
+            left: 95px;
+            width: 250px; 
+            background: rgba(15,15,15,0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 8px;
+            padding: 20px;
+            color: white;
+            opacity: 0;
+            transform: translateX(-15px) scale(0.98);
+            pointer-events: none;
+            z-index: 95;
+            transition: transform 0.5s cubic-bezier(0.4,0,0.2,1)
+        }
+        .graphicsmenu.open{
+            opacity: 1;
+            transform: translateX(0) scale(1);
+            pointer-events: auto;
+        }
+    
+        .upperletter{
+            margin-top: 0; 
+            border-bottom: 1px solid #555; 
+            padding-bottom: 10px;
+        }
+        .label{
+            display: flex; 
+            justify-content: space-between;
+        }
+        .quality{
+            width: 100%;
+            padding: 5px; 
+            background: #333; 
+            color: white; 
+            border: none; 
+            border-radius: 5px;
+        }
     </style>
     <div id="loadingscreen">
-        <div class="loadingtitle">Initializing 3D Model(Use Headphones For a better experience)</div>
+        <div class="loadingtitle"><center>Initializing 3D Model </center><br>(Use Headphones For a better experience)</br> </div>
         <div class="progcunt">
             <div id="progbar"></div>
         </div>
@@ -159,6 +198,9 @@
             <div style="height: 30px;"></div> 
             <button id="btnedit" class="iconbtn" title="Shit edit">
                 <img src="./images/cook.png">
+            </button>
+            <button id="btnsettings" class="iconbtn" title="Settings">
+               <img src="./images/settings.png">
             </button>
             <button id="btnview" class="iconbtn" title="Cabin View">
                 <img src="./images/camera.png">
@@ -184,30 +226,46 @@
         </div>
 
         <div class="modeldrawer" id="modeldrawer">
-            <div class="drawertitle">Select Model</div>
             <div class="carcard" data-model="./3D_Models/modelDraco6.glb">
-                <img src="https://public.blenderkit.com/thumbnails/assets/860f5a12a25546c8984a12d0dde0b773/files/thumbnail_6fa2ea7d-ca8d-4a4a-a4b3-fc4358af5e39.jpg.256x256_q85_crop-%2C.jpg.webp?webp_generated=1766443301" alt="Ghost">
+                <img src="./images/rollsrender.webp" alt="Ghost">
                 <div class="carname">Rolls Royce Ghost (V12)</div>
             </div> 
             <div class="carcard" data-model="./3D_Models/astonDraco.glb">
-               <img src="https://static.wikia.nocookie.net/asphalt/images/0/01/A9-DBS-Zagato.png/revision/latest?cb=20231212161533" alt="Aston Martin Zagato">
+               <img src="./images/astonrender.jpg" alt="Aston Martin Zagato">
                 <div class="carname">Aston Martin DBS GT Zagato</div>
             </div>
             <div class="carcard" data-model="./3D_Models/modelDraco10.glb">
-               <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTVCd3BuwrRidu3_alzWWOgjF4OsH4fZE5syw&s" alt="Aston Martin Zagato">
+               <img src="./images/ferrari.jpg" alt="Aston Martin Zagato">
                 <div class="carname">Ferrari SF90 XX Stradale</div>
             </div>
         </div>
     </div>
-    <div id="graphics-settings" style="position: absolute; bottom: 30px; right: 30px; background: rgba(15,15,15,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; z-index: 100; font-family: 'Montserrat', sans-serif; color: white;">
-        <div style="font-size: 10px; letter-spacing: 3px; font-weight: 300; text-transform: uppercase; margin-bottom: 15px; color: #aaa;">Graphics</div>
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
-            <div style="font-size: 13px;">Anti-Aliasing</div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <input type="range" id="msaaSlider" min="0" max="3" step="1" value="2" style="cursor: pointer; width: 80px; accent-color: #d4af37;">
-                <div id="msaaReadout" style="font-size: 13px; font-weight: bold; width: 25px; text-align: right;">4x</div>
-            </div>
-        </div>
+    <div id="graphicsmenu" class="graphicsmenu">
+    <h3 class="upperletter">Graphics</h3>
+    
+    <div style="margin-bottom: 15px;">
+        <label class="label"> Exposure <span id="exposurevalue">1.0</span></label>
+        <input type="range" id="exposure" min="0.1" max="3" step="0.1" value="1.0" style="width: 100%">
+    </div>
+    
+    <div style="margin-bottom: 15px">
+        <label class="label"> Bloom Strength: <span id="inbloom">0.2</span></label>
+        <input type="range" id="bloom" min="0" max="0.5" step="0.1" value="0.2" style="width: 100%">
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+        <label style="display: flex; justify-content: space-between;"> Anti-Aliasing <span id="valmsaa">4x</span></label>
+        <input type="range" id="antialaishing" min="0" max="4" step="1" value="2" style="width: 100%;">
+    </div>
+    
+    <div style="margin-bottom: 10px;">
+        <label style="display: block; margin-bottom: 5px;"> Overall Quality: </label>
+        <select id="selquality" class="quality">
+            <option value="low">Potato (Best Performance)</option>
+            <option value="medium">Good (not too bad visuals)</option>
+            <option value="high" selected>Epic (Best Visuals)</option>
+        </select>
+       </div>
     </div>
 
     <script type="module"

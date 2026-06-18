@@ -67,9 +67,7 @@ oaderchig.load('./hdris/hrdi.hdr', (texture) => {
     scene.add(skybox);
     texture.dispose();
 })
-btnmenu.addEventListener('click', () => {
-    modeldrawer.classList.toggle('open');
-})
+
 let lightmode = 0;
 let lbmesh = [];
 let rbmesh = [];
@@ -155,7 +153,6 @@ const poses = [
     {pos: new THREE.Vector3(0.915,0.650,2.853), target: new THREE.Vector3(0,0.5,0), fov: 60 },
     {pos: new THREE.Vector3(-1.675,1.990,-1.993), target: new THREE.Vector3(0,0.5,0), fov: 60 }
     ,{pos : new THREE.Vector3(2.455,1.884,-1.029), target: new THREE.Vector3(0,0.5,0), fov: 60 },
-    
 ]
 const posesam = [
     { pos: new THREE.Vector3(-1.101,0.650,2.787), target: new THREE.Vector3(0,0.5,0), fov: 60 },
@@ -207,7 +204,7 @@ const beatcooldown = 200
 const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight), 
     0.01,
-    0.3, 
+    0.3,
     0.3
 );
 
@@ -323,6 +320,74 @@ if(btnedit){
         }
     })
 }
+const btnsett = document.getElementById('btnsettings')
+const menugraph = document.getElementById('graphicsmenu')
+btnsett.addEventListener('click', () => {
+    menugraph.classList.toggle('open')
+    modeldrawer.classList.remove('open')
+})
+btnmenu.addEventListener('click', () => {
+    modeldrawer.classList.toggle('open')
+    graphicsmenu.classList.remove('open')
+})
+
+
+
+
+const expo = document.getElementById('exposure')
+const valexpo = document.getElementById('exposurevalue')
+expo.addEventListener('input', (e) => {
+    const val = parseFloat(e.target.value)
+    renderer.toneMappingExposure = val
+    valexpo.innerText = val.toFixed(1)
+})
+const bloom = document.getElementById('bloom')
+const valbloom = document.getElementById('inbloom')
+bloom.addEventListener('input', (e) => {
+    const val = parseFloat(e.target.value)
+    bloomPass.strength = val
+    valbloom.innerText = val.toFixed(1)
+})
+const msaa = document.getElementById('antialaishing')
+const valmsaa = document.getElementById('valmsaa')
+const msaalevel = [0,2,4,8,16]
+msaa.addEventListener('input', (e) => {
+    const levelin = parseInt(e.target.value)
+    const samplesr = msaalevel[levelin]
+    if (samplesr === 0) {
+    valmsaa.innerText = 'off';
+    } else {
+    valmsaa.innerText = samplesr + 'x'; 
+    }
+    composer.renderTarget1.samples = samplesr;
+    composer.renderTarget2.samples = samplesr;
+    composer.renderTarget1.dispose();
+    composer.renderTarget2.dispose();
+})
+const selquality = document.getElementById('selquality')
+selquality.addEventListener('change', (e) => {
+    const quality = e.target.value
+    if(quality === 'low'){
+        renderer.setPixelRatio(0.3)
+        bloomPass.enabled = false
+    }
+    else if (quality === 'medium'){
+        renderer.setPixelRatio(1)
+        bloomPass.enabled = true
+    }
+    else if (quality === 'high'){
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+        renderer.shadowMap.enabled = true
+        renderer.shadowMap.type = THREE.VSMShadowMap
+    }
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
+    scene.traverse((child) => {
+        if(child.isMesh && child.material){
+            child.material.needsUpdate = true
+        }
+    });
+});
 let screencover = null
 let screenopen = false
 const controls = new OrbitControls(camera, renderer.domElement);
