@@ -26,11 +26,23 @@ Welcome to hell sorry for my messy code :(
 
 - THREE JS
 
-lets first load the 3D model in blender and try to set pivots on which each door will rotate 
+1. lets first load the 3D model in blender and try to set pivots on which  each door will rotate follow the steps below :-
 
-follow the steps below :-
+   load the model
+   ![Load model](https://github.com/adityaprasad-sudo/Spectra/blob/ccd8bd335191e66cb06b582793fd7502774438eb/tutorial%20images/fileupload.png?raw=true)
+   Choose the file format depending on your model ( eg :- if your file format is .gltf/.glb then choose .gltf 2.0 )
+2. Part selecting
 
-1. load the model
+   now there could be two case :- 
+   
+   case-I: The whole car body is welded ie you cant select a part like door distinctively, this is the way to seperate them:-
+   ![case-1 expample](https://github.com/adityaprasad-sudo/Spectra/blob/ccd8bd335191e66cb06b582793fd7502774438eb/tutorial%20images/weldeddoor.png?raw=true) this is an example
+
+   steps to seperate them
+   ![case-1 expample](https://github.com/adityaprasad-sudo/Spectra/blob/ccd8bd335191e66cb06b582793fd7502774438eb/tutorial%20images/Screenshot%202026-06-18%20174100.png?raw=true)
+   ![case-1 expample](https://github.com/adityaprasad-sudo/Spectra/blob/ccd8bd335191e66cb06b582793fd7502774438eb/tutorial%20images/Screenshot%202026-06-18%20174100.png?raw=true)
+
+
 
 ### Installing
 
