@@ -20,6 +20,23 @@
 </head>
 <body>
     <style>
+        @media (max-width: 768px) {
+            .toolbar {
+                overflow-y: auto;
+                padding-bottom: 40px;
+            }
+            .toolbar::-webkit-scrollbar {
+                display: none;
+            }
+            .graphicsmenu {
+                top: 30px !important;
+                left: 70px !important;
+                width: calc(100vw - 90px) !important;
+            }
+            input[type="range"] {
+                touch-action: none;
+            }
+        }
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
         body { margin: 0; overflow: hidden; font-family: 'Montserrat', sans-serif; }
         #loadingscreen{

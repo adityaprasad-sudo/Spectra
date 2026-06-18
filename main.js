@@ -290,7 +290,7 @@ if(btnedit){
             }
             indexsho = 0
             campos.copy(currentpose[indexsho].pos)
-            camlock.copy(curentpose[indexsho].target)
+            camlock.copy(currentpose[indexsho].target)
             fov = currentpose[indexsho].fov
             camera.position.copy(campos)
             controls.target.copy(camlock)
@@ -354,6 +354,10 @@ const msaalevel = [0,2,4,8,16]
 msaa.addEventListener('input', (e) => {
     const levelin = parseInt(e.target.value)
     const samplesr = msaalevel[levelin]
+    const maxSamples = renderer.capabilities.maxSamples;
+    if (samplesr > maxSamples) {
+        samplesr = maxSamples;
+    }
     if (samplesr === 0) {
     valmsaa.innerText = 'off';
     } else {
@@ -479,7 +483,7 @@ document.getElementById('btnview').addEventListener('click' , () => {
             camera.rotation.y = Math.PI
             camera.position.copy(intcamerapos);
             controls.target.copy(intcamtarget);
-            ambientLight.intensity = 0
+            ambientlight = 0
             dome.intensity = 5
             
         }else{
@@ -488,7 +492,7 @@ document.getElementById('btnview').addEventListener('click' , () => {
             controls.maxPolarAngle = Math.PI / 2 - 0.05;
             camera.position.set(4, 2, 5)
             controls.target.set(0, 0, 0)
-            ambientLight.intensity = 1
+            ambientlight = 1;
             dome.intensity = 0
         }
     });
