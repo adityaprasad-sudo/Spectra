@@ -150,12 +150,70 @@ Now, after creating a raw scene using the renderers we pass it thorugh the **eff
 **Shadows**
 
 This is very tricky because if you use real time shadows the frame rates would drop drastically like i was getting 55-60 without the shadows and with the shadows enabled it drops to 25-30
-so intead of using real time shadows we will bake the shadows in blender and use the .png file from there to use as a floor in our project
+so instead of using real time shadows we will bake the shadows in blender and use the .png file from there to use as a floor in our project
 I have given the dome.blend file just open it and follow these instructions to make its shadow map:-
 
 **STEPS TO MAKE SHADOW MAP**
 
-1. first import you desired model into the .blend file in blender
+1. first import you desired model into the .blend file in blender 
+
+![import](https://github.com/adityaprasad-sudo/Spectra/blob/main/tutorial%20images/fileimpo.png?raw=true) 
+
+2. If the render engine is set to eevee change it to cycles also you can switch from CPU to GPU compute if you have a good dedicated gpu it can drastically improve performance
+
+![import](https://github.com/adityaprasad-sudo/Spectra/blob/main/tutorial%20images/render.png?raw=true)
+
+**NOTE**:- if you want to see how the shadow looks switch to rendered view by clicking the water bubble typa thing in the top right of the viewport.
+
+3. select the floor mesh and the image node of the floor in the shader editor 
+
+![import](https://github.com/adityaprasad-sudo/Spectra/blob/main/tutorial%20images/meshselct.png?raw=true)
+
+4. Click the Bake button to bake the shadows and get a png file
+
+![import](https://github.com/adityaprasad-sudo/Spectra/blob/main/tutorial%20images/bakedimage.png?raw=true)
+
+5. save the baked shadow as a png
+
+![import](https://github.com/adityaprasad-sudo/Spectra/blob/main/tutorial%20images/imagesave.png?raw=true)
+
+**How to use the bakedshadow.png in your project**
+
+To use different shadow maps for different cars we use this custom floor code that automatically removes the white background from the baked shadows and allows us to adjust its alpha value to make the shadows more darker or lighter for instance if you increase the aplha the shadows become darker and lowering the alpha makes the shadows lighter 
+
+**NOTE**:- I have taken help from AI to make this peice of code
+
+```
+            const texsha = new THREE.TextureLoader(manager).load('./shadowmaps/astonshadow.png'); //loadingthe shadow.png and using it as a the texture of the floor and change the png file accordingly
+            const geosha = new THREE.PlaneGeometry(6.5, 10); //ajust this accordingly if you car is bigger make this value bigger 6.5 is the length and 10 is the width of the plane in this case
+            const matsha = new THREE.ShaderMaterial({
+                transparent: true,
+                depthWrite: false,
+                uniforms:{
+                    tDiffuse:{value:texsha},
+                    shadowColor:{value: new THREE.Color(0x000000)}
+                },
+                vertexShader:`
+                    varying vec2 vUv;
+                    void main(){
+                        vUv = uv;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }`,
+                fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform vec3 shadowColor;
+                varying vec2 vUv;
+                void main(){
+                    vec4 tex = texture2D(tDiffuse, vUv);
+                    float alpha = 1.0 - tex.r;
+                    gl_FragColor = vec4(shadowColor, alpha*0.99); // adjust the alpha here to make the shadows darker or brighter
+                }`
+            })
+```
+Paste it in every car block you are making or using also dont forget to change the png file for different cars
+
+
+
 
 
 ## Help
