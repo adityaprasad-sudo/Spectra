@@ -137,7 +137,7 @@ oaderchig.load('./hdris/hrdi.hdr', (texture) => {
 ```
 The above is the whole dome with hdri setup, i have used GroundProjectSkybox constructor to build a new dome if you zoom out it looks like a sphere but if we adjust the height it adds a floor inside the cube adjusting the height also adjusts the radius of the floor ( inside the sphere ) 
 
-**NOTE**:- the **skybox.radius only affects the radius of the floor** while skybox.scale.setScalar affects the whole sphere ie you can also shape it like a oval elliptical structure since the **scale.setScalar(X,Y,Z)** but if you specify scale.setScalar(100) it gives a perfect sphere with radius 100.
+**NOTE**:- the **skybox.radius only affects the radius of the floor** while skybox.scale.setScalar affects the whole sphere ie you can also shape it like a oval elliptical structure since the syntax is **scale.setScalar(X,Y,Z)** but if you specify scale.setScalar(100) it gives a perfect sphere with radius 100.
 
 **File Formats**
 
