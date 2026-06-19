@@ -87,13 +87,21 @@ Welcome to hell sorry for my messy code :(
 
    ![hingemesh](https://github.com/adityaprasad-sudo/Spectra/blob/main/tutorial%20images/Screenshot%202026-06-18%20175819.png?raw=true)
 
-3. Final step to **map the pivot of the door to the cursor**
+3. step to **map the pivot of the door to the cursor**
 
    After placing the cursor on your desired position you would have to click on the doot but make you are in the select mode(should not be in cursor mode) otherwise the cursor will shift whereever you click on. 
    
    After clicking the door **Right Click** it and click **set origin to** and then **origin to 3d cursor** 
 
    ![hingemesh](https://github.com/adityaprasad-sudo/Spectra/blob/main/tutorial%20images/Screenshot%202026-06-18%20175359.png?raw=true)
+
+4. Final Step (Exporting)
+
+    while Exporting make sure you export it as glb format so that the textures are not messed up as glb file packages all the textures and stuff in one go however there is a slight problem i will disscuss it further
+
+    How to export?
+    ![hingemesh](https://github.com/adityaprasad-sudo/Spectra/blob/main/tutorial%20images/Screenshot%202026-06-18%20175359.png?raw=true)
+
 
 **And thats it now if you rotate the door around z axis it should rotate about the hinge or wherever you previously placed your 3D cursor at. You can repeate the same steps to pivot the remaining doors, bonnet, trunk etc. Since animation part is handeled in THREE JS** 
 
@@ -212,28 +220,62 @@ To use different shadow maps for different cars we use this custom floor code th
 ```
 Paste it in every car block you are making or using also dont forget to change the png file for different cars
 
+**Carpart Animations and reflections**
+
+First we are initializing an empty array named Carparts and then when we load a model of car we are extracting its parts such as doorleft, doorright, bonnet, trunk etc and pusing it to the carparts array and then we are using a simple raycaster (It is available on three js examples ) to select the mesh we click on and then i have divided the door opening into two parts swan and normal as the doors in the aston martin rotate a little upward and the then opens in the yaxis you can also change the target animation and how long should the animation by editing these peices of code 
+
+```part.rotation[axis] = THREE.MathUtils.lerp(part.rotation[axis], targetangle, 0.08(edit this value if you want the animations to last longer));```
+
+editing the above value can make the animations of door last longer
+
+`let targetangle = part.userData.isOpen ? (Math.PI/3(edit this angle to make the doors open more)) : 0`
+
+editing the above value would make the doors open at an specific angle as per your needs
 
 
+For the reflections since we are having an hdri file already the car paint would reflect those and make it seam like its realtime reflections but it isnt truly realtime its just an hdri image which saves a lot of frame rates
 
 
-## Help
+**Edit Mode**
 
-Any advise for common problems or issues.
+This isnt the best edit of the car but the working of it is beautifull
+1. first you need an audio file with the music then seperate its vocals , intruments, drums etc.
+2. use an frequency analyser to target the specific paino frequency or any other intrument frequency do the same for drums, vocals etc.
+3. Then use `const painofreq = analyzepiano.getFrequencyData();` to get the frequency data as an array list and then use `const paipeak = painofreq[25]` to target the specific paino frequency and then use that frequency to either switch the camera or flash the headlights according to the beats everything can understood in the code from line 1045 to 1108
+
+**Headlights,tailights and indicators**
+Initializing lights just like we initialized doors
+```const lowlb = carModel.getObjectByName('Object_253');
+    const highlb = carModel.getObjectByName('Object_249');
+    const lowrb = carModel.getObjectByName('Object_175.021');
+    const highrb = carModel.getObjectByName('Object_256');
+    const taillight = carModel.getObjectByName('Object_460');
 ```
-command to run if program contains helper info
+
+**NOTE:-VERY IMPORTANT** Put the object name from blender in the eg:- ```carmodel.getObjectByName('OBJECT NAME HERE')```
+
+To make them glow we use a custom function which alters the objects material while playin with emissiveIntensity to control how intensive the light should glow you can also adjust the intensity by editing ```hbmesh.forEach(mesh => mesh(use your own headligth mesh name).material.emissiveIntensity = 50(edit this value to alter intensity));```
+
+**For the indicators**
+
+We use simple mathematics which involves playing with the sin() and raise it to the power 4 then its output would only return [0,1] which we use to make the indicators blink heres the mathematical function ``` Math.pow(Math.sin(time), 4)``` and heres the code we used to make it do infinite ossilations with time:-
+
+
+``` 
+    const time = Date.now() * 0.003;
+    let wavelight = Math.pow(Math.sin(time), 4);
+    const flashinte = wavelight*16
 ```
+**Bonuses**
 
-## Authors
+I also animated the ectascy and screencover of rolls royce by using the same technics i used while making the door animations i only changed the axis of rotations and angle however while animating the ectascy i first animated its cover and then when the animation for the cover of ectascy was over then the animation for ectasy played look at code from `line 945 - 971` 
 
-Contributors names and contact info
+**Sweeping indicators**
 
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
+This was made with a little help of ai basicaly i altered the mesh uv to make it straight paralell verticals lines then we set the startpoint of light to 0 and the endpoint of the light to 1 and stor it in a variable named usweep ANd then use step(vUv.x, usweep) function to talk to the GPU directly and try to load the pixels.
 
-## Version History
 
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
-* 0.1
-    * Initial Release
+## AI USAGE
+
+I have used ai to fix code and fix the logics and have used inline suggestions in vscode so the ai contribution in this project is about 20-25%.
+
