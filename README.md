@@ -11,7 +11,7 @@ I tried my best to optimize the webpage as much as possible such as by avoiding 
 Well i did use a lot of stuff but here are the common ones
 - Blender (**Very important** without this i couldnt have made the webpage)
 - Three JS (**Most important** Took a lot of time to implement the car model and the enviorment with the lighting )
-- Documentation ( Three js bible [almost made me cry😭] )
+- Documentation of THREE JS ( Three js bible [almost made me cry😭] )
 - 3D models ( Any model is fine since i will explain how to make the models work )
 - HTML/CSS (do i need to explain why this is needed)
 - Basic Blender SKills
@@ -25,6 +25,7 @@ Welcome to hell sorry for my messy code :(
 ### Dependencies
 
 - **THREE JS**
+- **Blender** or any other 3D software you know
 
 # Blender Part
 
@@ -100,7 +101,9 @@ Welcome to hell sorry for my messy code :(
     while Exporting make sure you export it as glb format so that the textures are not messed up as glb file packages all the textures and stuff in one go however there is a slight problem i will disscuss it further
 
     How to export?
-    ![hingemesh](https://github.com/adityaprasad-sudo/Spectra/blob/main/tutorial%20images/Screenshot%202026-06-18%20175359.png?raw=true)
+
+    ![hingemesh](https://github.com/adityaprasad-sudo/Spectra/blob/main/tutorial%20images/export.png?raw=true)
+    ![hingemesh](https://github.com/adityaprasad-sudo/Spectra/blob/main/tutorial%20images/export2.png?raw=true)
 
 
 **And thats it now if you rotate the door around z axis it should rotate about the hinge or wherever you previously placed your 3D cursor at. You can repeate the same steps to pivot the remaining doors, bonnet, trunk etc. Since animation part is handeled in THREE JS** 
@@ -242,6 +245,7 @@ This isnt the best edit of the car but the working of it is beautifull
 1. first you need an audio file with the music then seperate its vocals , intruments, drums etc.
 2. use an frequency analyser to target the specific paino frequency or any other intrument frequency do the same for drums, vocals etc.
 3. Then use `const painofreq = analyzepiano.getFrequencyData();` to get the frequency data as an array list and then use `const paipeak = painofreq[25]` to target the specific paino frequency and then use that frequency to either switch the camera or flash the headlights according to the beats everything can understood in the code from line 1045 to 1108
+4. Make an array containg the positions for the camera with thier fovs to show in the edit.
 
 **Headlights,tailights and indicators**
 Initializing lights just like we initialized doors
@@ -279,3 +283,35 @@ This was made with a little help of ai basicaly i altered the mesh uv to make it
 
 I have used ai to fix code and fix the logics and have used inline suggestions in vscode so the ai contribution in this project is about 20-25%.
 
+## Bonus Draco file compression GLB
+
+To further optimize the webpage I used google's draco file compression to reduce the size of glb file heres how to do it
+
+1. save your glb file in a folder and open cmd in that same folder
+2. type `npm install -g gltf-pipeline` in the cmd window 
+3. use command `gltf-pipeline -i yourglbfile.glb -o output.glb -d`
+4. copy the draco file to the project's folder
+5. use this code to load draco file formats
+```
+const draloader = new DRACOLoader();
+draloader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+const loader = new GLTFLoader();
+loader.setDRACOLoader(draloader);
+```
+
+## One Problem with GLb
+
+If you are a blender pro sometimes the blender mathmatics doesnt fit while exporting in glb format as a result some textures are glitched to fix it 
+1. open the uv editor in blender of the mesh whose textures are glicthing.
+2. Fix the UV map by resizing and scaling just make sure that the map covers the whoe texture.
+3. now export and the problem would be fixed.
+
+## Tips
+
+1. Try to find a car which is detailed to only an extent where the users would be able to watch do not use hyper ultra realistic models for this project as it would cause frame drops 
+2. Use Shadow maps/baked shadows do not use real time shadows or reflections as this would cause drastic frame drop and will not even work in low end devices
+3. try to name every object a unique name in blnder so that its easier to know which mesh is which
+4. Use Draco compression to reduce the size of the glb file thereby increasing the loading speed of the website
+5. Make a good graphics menu to adjust everything just like i have done so it can run on low end devices
+
+# THANK YOU
