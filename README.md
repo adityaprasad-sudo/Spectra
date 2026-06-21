@@ -108,6 +108,8 @@ Welcome to hell sorry for my messy code :(
 
 **And thats it now if you rotate the door around z axis it should rotate about the hinge or wherever you previously placed your 3D cursor at. You can repeate the same steps to pivot the remaining doors, bonnet, trunk etc. Since animation part is handeled in THREE JS** 
 
+The Dome setup in blender can be found here - https://drive.google.com/file/d/1ntffneU6PKUBpr8NixmF1iX9B3QB_HEN/view?usp=sharing
+
 ---
 
 # The Code
